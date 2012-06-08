@@ -18,8 +18,8 @@ namespace iom
          * @param devname Device name
          */
         Tundev(const std::string& devname = "");
-
         ~Tundev();
+        void setMTU(int mtu);
 
     private:
         // File descriptor to device
