@@ -2,13 +2,14 @@
  * @file sockaddress.h
  * @brief A socket address is an (IP, port) tuple
  */
-#ifndef IOM_NET_ADDRESS_H
-#define IOM_NET_ADDRESS_H
+#ifndef IOM_NET_SOCKADDRESS_H
+#define IOM_NET_SOCKADDRESS_H
 
 #include <iostream>
 #include <string>
 #include <arpa/inet.h>
 #include <vector>
+#include "address.h"
 
 namespace iom
 {
@@ -34,6 +35,12 @@ namespace iom
          */
         SockAddress(const std::string& ip, unsigned short port, int ipVersion = 4);
         /**
+         * @brief Create an address with an Address instance and port
+         * @param addr Address instance
+         * @param ipVersion 4 or 6
+         */
+        SockAddress(const Address& addr, unsigned short port);
+        /**
          * @brief Create an address from a sockaddr
          * @param saddr input sockaddr
          */
@@ -56,7 +63,7 @@ namespace iom
          * @brief Get IP address
          * @return ip
          */
-        const std::string& getIp() const;
+        const Address& getIp() const;
         /**
          * @brief Get port
          * @return port
@@ -125,14 +132,13 @@ namespace iom
         static std::vector<SockAddress> getIfaceAdresses(int port = 0);
 
     private:
-        // IP string
-        std::string ip;
+        // IP
+        Address ip;
         // TCP or UDP port
         unsigned short port;
         // 4 or 6
-        int ipVersion;
 
     };
 }
 
-#endif /* IOM_NET_ADDRESS_H */
+#endif /* IOM_NET_SOCKADDRESS_H */
