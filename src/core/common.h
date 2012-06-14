@@ -9,6 +9,7 @@
 #include "exception.h"
 #include "log.h"
 #include "sharedbool.h"
+#include "string.h"
 #include <boost/assert.hpp>
 #include <string>
 
