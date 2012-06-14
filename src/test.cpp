@@ -10,12 +10,14 @@ int main() {
         // Test addresses
         SockAddress a("10.42.0.1:4545");
         Address a2("::1");
-        log::debug << "Addr " << a << " " << a2 << " (" << a2.toString() << ")" << log::endl;
+        //log::debug << "Addr " << a << " " << a2 << " (" << a2.toString() << ")" << log::endl;
 
         // Test iface listing
-        std::vector<NetIf> ifaces = NetIf::getAllNet();
+        //std::vector<NetIf> ifaces = NetIf::getAllNet();
+        std::vector<NetIf> ifaces = NetIf::getWifiUp();
+        log::info << "Active Wifi interfaces:" << log::endl;
         for (std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++) {
-            log::info << *i << log::endl;
+            log::info << "- " << *i << log::endl;
         }
 
         Tundev tun;

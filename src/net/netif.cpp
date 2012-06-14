@@ -54,9 +54,6 @@ namespace iom
         return name;
     }
 
-    /**
-     * @brief Get all IP interfaces on the system
-     */
     std::vector<NetIf> NetIf::getAllNet() {
         std::vector<NetIf> ifaces;
         struct ifaddrs *ifAddrStruct = NULL;
@@ -74,24 +71,38 @@ namespace iom
         return ifaces;
     }
 
-    /**
-     * @brief Get a specific interface on the system
-     * @param name interface's name
-     */
-    NetIf NetIf::get(const std::string& name) {
-        NetIf niRet;
+    std::vector<NetIf> NetIf::getByName(const std::string& name) {
+        std::vector<NetIf> ifaces;
         struct ifaddrs *ifAddrStruct = NULL;
         struct ifaddrs *ifa = NULL;
 
         getifaddrs(&ifAddrStruct);
         for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
             if (name.compare(ifa->ifa_name) == 0) {
-                niRet = NetIf(*ifa);
-                break;
+                ifaces.push_back(NetIf(*ifa));
             }
         }
         if (ifAddrStruct != NULL)
             freeifaddrs(ifAddrStruct);
-        return niRet;
+        return ifaces;
+    }
+
+    std::vector<NetIf> NetIf::getWifiUp() {
+
+        std::vector<NetIf> ifaces;
+        struct ifaddrs *ifAddrStruct = NULL;
+        struct ifaddrs *ifa = NULL;
+
+        getifaddrs(&ifAddrStruct);
+        for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr != NULL && (ifa->ifa_flags & IFF_UP)
+                && (ifa->ifa_addr->sa_family == AF_INET || ifa->ifa_addr->sa_family == AF_INET6)) {
+                if (std::string(ifa->ifa_name).find("wlan") != std::string::npos)
+                    ifaces.push_back(NetIf(*ifa));
+            }
+        }
+        if (ifAddrStruct != NULL)
+            freeifaddrs(ifAddrStruct);
+        return ifaces;
     }
 }
