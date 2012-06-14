@@ -109,9 +109,7 @@ namespace iom
     }
 
     std::ostream& operator<<(std::ostream& os, const Address& addr) {
-        if (addr.ipVersion == 6)
-            os << '[' << addr.ip << ']';
-        else if (addr.ip.length())
+        if (addr.ip.length())
             os << addr.ip;
         else
             os << '*';
@@ -119,9 +117,9 @@ namespace iom
     }
 
     std::string Address::toString(bool addBrackets) const {
-        if (addBrackets) {
+        if (addBrackets && ipVersion == 6) {
             std::ostringstream stream;
-            stream << *this;
+            stream << '[' << ip << ']';
             return stream.str();
         } else {
             return ip;

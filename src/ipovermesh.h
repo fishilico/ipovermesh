@@ -9,6 +9,7 @@
 #include "core/common.h"
 #include "net/sockaddress.h"
 #include "net/tundev.h"
+#include "net/netif.h"
 
 #endif /* IPOVERMESH_H */
 
