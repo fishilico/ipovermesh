@@ -1,4 +1,5 @@
 #include "tundev.h"
+#include "ctlsocket.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -41,15 +42,8 @@ namespace iom
     }
 
     void Tundev::setMTU(int mtu) {
-        int s = socket(PF_INET, SOCK_DGRAM, 0);
-        struct ifreq ifr;
-        ifr.ifr_mtu = mtu;
-        strncpy(ifr.ifr_name, devname.c_str(), sizeof(ifr.ifr_name));
-        if( (ioctl(s, SIOCSIFMTU, &ifr)) < 0 )
-        {
-            close(s);
-            throw ErrException("TunDev","Unable to set MTU");
-        }
-        close(s);
+        CtlSocket s(devname);
+        if (!s.setMTU(mtu))
+            throw FailException("TunDev", "Unable to set MTU");
     }
 }
