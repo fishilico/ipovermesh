@@ -1,10 +1,10 @@
 /**
- * @file rreqpacket.h
- * @brief Route Request packet
+ * @file rreplypacket.h
+ * @brief Route Reply packet
  */
 
-#ifndef RREQPACKET_H
-#define RREQPACKET_H
+#ifndef IOM_NET_RREPLYPACKET_H
+#define IOM_NET_RREPLYPACKET_H
 
 #include "../parser/gttpacket.h"
 #include "../net/address.h"
@@ -12,20 +12,21 @@
 
 namespace iom
 {
-    class RReqPacket : public SockPacket
+    class RReplyPacket : public SockPacket
     {
     public:
-        RReqPacket(const Address& source, const Address& destination, unsigned int n);
+        RReplyPacket(const Address& source, const Address& destination,
+                const Address& nexthop, unsigned int n);
 
         /**
          * @brief Parse a GTT packet
          * @param gttpkt
          */
-        RReqPacket(const GTTPacket& gttpkt);
+        RReplyPacket(const GTTPacket& gttpkt);
 
-        RReqPacket(const RReqPacket& pkt);
+        RReplyPacket(const RReplyPacket& pkt);
 
-        const RReqPacket& operator=(const RReqPacket& pkt);
+        const RReplyPacket& operator=(const RReplyPacket& pkt);
 
         /**
          * @brief Build the raw text query for this packet
@@ -36,6 +37,7 @@ namespace iom
         // Properties
         Address source;
         Address destination;
+        Address nexthop;
         unsigned int n;
     private:
         /**
@@ -46,5 +48,5 @@ namespace iom
     };
 }
 
-#endif /* RREQPACKET_H */
+#endif /* IOM_NET_RREPLYPACKET_H */
 

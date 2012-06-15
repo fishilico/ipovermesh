@@ -1,22 +1,23 @@
-#include "rreqpacket.h"
+#include "rreplypacket.h"
 #include "../core/common.h"
 #include <boost/algorithm/string.hpp>
 
 namespace iom
 {
 
-    RReqPacket::RReqPacket(const Address& source, const Address& destination, unsigned int n)
-    :source(source), destination(destination), n(n) {
+    RReplyPacket::RReplyPacket(const Address& source, const Address& destination,
+                const Address& nexthop, unsigned int n)
+    :source(source), destination(destination), nexthop(nexthop), n(n) {
     }
 
-    RReqPacket::RReqPacket(const GTTPacket& gttpkt) {
+    RReplyPacket::RReplyPacket(const GTTPacket& gttpkt) {
         std::map<std::string, std::string>::const_iterator it;
 
         // Check protocol
-        if (gttpkt.protocol.compare("RREQ")) {
-            log::error << "RReq: Invalid GTT protocol "
+        if (gttpkt.protocol.compare("RREP")) {
+            log::error << "RRequest: Invalid GTT protocol "
                 << gttpkt.protocol << log::endl;
-            throw FailException("RReqPacket", "Invalid GTT packet");
+            throw FailException("RReplyPacket", "Invalid GTT packet");
         }
 
         // Parse headers
@@ -25,30 +26,33 @@ namespace iom
                 source = Address(it->second);
             } else if (boost::iequals(it->first, "Destination")) {
                 destination = Address(it->second);
+            } else if (boost::iequals(it->first, "Next Hop")) {
+                nexthop = Address(it->second);
             } else if (boost::iequals(it->first, "N")) {
                 n = String::toInt(it->second);
             } else {
-                log::error << "RReqPacket: Unknown header "
+                log::error << "RReply: Unknown header "
                     << it->first << log::endl;
-                throw MinorException("RReqPacket", "Invalid GTT header");
+                throw MinorException("RReplyPacket", "Invalid GTT header");
             }
         }
     }
 
-    RReqPacket::RReqPacket(const RReqPacket& pkt)
-    :source(pkt.source), destination(pkt.destination), n(pkt.n) {
+    RReplyPacket::RReplyPacket(const RReplyPacket& pkt)
+    :source(pkt.source), destination(pkt.destination), nexthop(pkt.nexthop), n(pkt.n) {
     }
 
-    const RReqPacket& RReqPacket::operator=(const RReqPacket& pkt) {
+    const RReplyPacket& RReplyPacket::operator=(const RReplyPacket& pkt) {
         if (this != &pkt) {
             this->source = pkt.source;
             this->destination = pkt.destination;
+            this->nexthop = pkt.nexthop;
             this->n = pkt.n;
         }
         return *this;
     }
 
-    unsigned long RReqPacket::build(char **newData) const {
+    unsigned long RReplyPacket::build(char **newData) const {
         BOOST_ASSERT(newData != NULL);
         // Build a GTT Packet to build
         GTTPacket gttpkt;
@@ -56,11 +60,12 @@ namespace iom
         return gttpkt.build(newData);
     }
 
-    void RReqPacket::fillGTTPacket(GTTPacket &gttpkt) const {
+    void RReplyPacket::fillGTTPacket(GTTPacket &gttpkt) const {
         gttpkt.protocol = "RREQ";
         gttpkt.method = "";
         gttpkt.headers["Source"] = source.toString();
         gttpkt.headers["Destination"] = destination.toString();
+        gttpkt.headers["Next Hop"] = nexthop.toString();
         gttpkt.headers["N"] = String::fromInt(n);
     }
 }
