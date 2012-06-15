@@ -13,7 +13,7 @@ find_package(Boost 1.40.0 COMPONENTS thread)
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
-file(GLOB_RECURSE sources src/core/*.cpp src/net/*.cpp src/parser/*.cpp)
+file(GLOB_RECURSE sources src/core/*.cpp src/mesh/*.cpp src/net/*.cpp src/parser/*.cpp)
 
 add_executable(test ${sources} src/test.cpp)
 target_link_libraries(test ${Boost_LIBRARIES})
