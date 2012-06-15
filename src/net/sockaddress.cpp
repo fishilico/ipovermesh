@@ -91,6 +91,10 @@ namespace iom
         return ip;
     }
 
+    std::string SockAddress::getIpStr() const {
+        return ip.toString();
+    }
+
     unsigned short SockAddress::getPort() const {
         return port;
     }

@@ -61,9 +61,14 @@ namespace iom
 
         /**
          * @brief Get IP address
-         * @return ip
+         * @return ip Address
          */
         const Address& getIp() const;
+        /**
+         * @brief Get IP address in a string
+         * @return ip string
+         */
+        std::string getIpStr() const;
         /**
          * @brief Get port
          * @return port
