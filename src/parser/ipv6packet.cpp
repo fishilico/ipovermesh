@@ -7,7 +7,7 @@ namespace iom {
         data(data),
         size(size)
     {
-        if((data[4] & 0b01100000) != 0b01100000)
+        if((data[0] & 0b01100000) != 0b01100000)
             throw FailException("IPv6Packet", "Data is not an IPv6 packet.");
     }
 
@@ -23,8 +23,8 @@ namespace iom {
         std::string address;
         for(int i = 0; i < 8; i++)
         {
-            address += convertToHexa(data[12+2*i]);
-            address += convertToHexa(data[12+2*i+1]);
+            address += convertToHexa(data[8+2*i]);
+            address += convertToHexa(data[8+2*i+1]);
             if(i < 7)
                 address += ':';
         }
@@ -35,8 +35,8 @@ namespace iom {
         std::string address;
         for(int i = 0; i < 8; i++)
         {
-            address += convertToHexa(data[28+2*i]);
-            address += convertToHexa(data[28+2*i+1]);
+            address += convertToHexa(data[24+2*i]);
+            address += convertToHexa(data[24+2*i+1]);
             if(i < 7)
                 address += ':';
         }

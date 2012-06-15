@@ -20,7 +20,7 @@ namespace iom
         struct ifreq ifr;
         memset(&ifr, 0, sizeof(ifr));
 
-        ifr.ifr_flags = IFF_TUN;
+        ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 
         if(!devname.empty())
             strncpy(ifr.ifr_name, devname.c_str(), IFNAMSIZ);
