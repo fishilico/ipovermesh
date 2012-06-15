@@ -10,6 +10,7 @@
 #include <net/if.h>
 #include <string>
 #include <unistd.h>
+#include "address.h"
 
 namespace iom {
     /**
@@ -27,6 +28,7 @@ namespace iom {
          * @return true on success
          */
         bool setMTU(int mtu);
+        bool activateInterface();
         
     private:
         bool ioctlReq(int request, struct ifreq& ifr);

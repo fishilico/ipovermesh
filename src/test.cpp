@@ -22,7 +22,14 @@ int main() {
 
         Tundev tun;
         tun.setMTU(1300);
+        tun.setIPv6(Address("aaaa::2"));
+        tun.activate();
         system("ifconfig -a");
+        while(true)
+        {
+            IPv6Packet p = tun.readPacket();
+            log::info << p.getSourceAddress() << "->" << p.getDestinationAddress() << log::endl;
+        }
     } catch (Exception e) {
         log::fatal << e << log::endl;
     }

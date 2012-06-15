@@ -35,6 +35,14 @@ namespace iom
         return this->ioctlReq(SIOCSIFMTU, ifr);
     }
 
+    bool CtlSocket::activateInterface() {
+        struct ifreq ifr;
+        if(!ioctlReq(SIOCGIFFLAGS, ifr))
+            return false;
+        ifr.ifr_flags = ifr.ifr_flags | IFF_UP;
+        return (ioctlReq(SIOCSIFFLAGS, ifr));
+    }
+
     bool CtlSocket::ioctlReq(int request, struct ifreq& ifr) {
         BOOST_ASSERT(sock >= 0);
         strncpy(ifr.ifr_name, devname.c_str(), sizeof (ifr.ifr_name));
