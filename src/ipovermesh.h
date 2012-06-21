@@ -11,5 +11,8 @@
 #include "net/tundev.h"
 #include "net/netif.h"
 
+#include "mesh/rreplypacket.h"
+#include "mesh/rrequestpacket.h"
+
 #endif /* IPOVERMESH_H */
 

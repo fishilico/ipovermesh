@@ -6,7 +6,7 @@ namespace iom
 {
 
     RReplyPacket::RReplyPacket(const Address& source, const Address& destination,
-                const Address& nexthop, unsigned int n)
+        const Address& nexthop, unsigned int n)
     :source(source), destination(destination), nexthop(nexthop), n(n) {
     }
 
@@ -14,9 +14,14 @@ namespace iom
         std::map<std::string, std::string>::const_iterator it;
 
         // Check protocol
-        if (gttpkt.protocol.compare("RREP")) {
-            log::error << "RRequest: Invalid GTT protocol "
+        if (gttpkt.protocol.compare("MESH")) {
+            log::error << "RReply: Invalid GTT protocol "
                 << gttpkt.protocol << log::endl;
+            throw FailException("RReplyPacket", "Invalid GTT packet");
+        }
+        if (gttpkt.method.compare("RREP")) {
+            log::error << "RReply: Invalid GTT method "
+                << gttpkt.method << log::endl;
             throw FailException("RReplyPacket", "Invalid GTT packet");
         }
 
@@ -26,7 +31,7 @@ namespace iom
                 source = Address(it->second);
             } else if (boost::iequals(it->first, "Destination")) {
                 destination = Address(it->second);
-            } else if (boost::iequals(it->first, "Next Hop")) {
+            } else if (boost::iequals(it->first, "NextHop")) {
                 nexthop = Address(it->second);
             } else if (boost::iequals(it->first, "N")) {
                 n = String::toInt(it->second);
@@ -61,11 +66,11 @@ namespace iom
     }
 
     void RReplyPacket::fillGTTPacket(GTTPacket &gttpkt) const {
-        gttpkt.protocol = "RREQ";
-        gttpkt.method = "";
+        gttpkt.protocol = "MESH";
+        gttpkt.method = "RREP";
         gttpkt.headers["Source"] = source.toString();
         gttpkt.headers["Destination"] = destination.toString();
-        gttpkt.headers["Next Hop"] = nexthop.toString();
+        gttpkt.headers["NextHop"] = nexthop.toString();
         gttpkt.headers["N"] = String::fromInt(n);
     }
 }

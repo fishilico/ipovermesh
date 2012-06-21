@@ -13,9 +13,14 @@ namespace iom
         std::map<std::string, std::string>::const_iterator it;
 
         // Check protocol
-        if (gttpkt.protocol.compare("RREQ")) {
+        if (gttpkt.protocol.compare("MESH")) {
             log::error << "RRequest: Invalid GTT protocol "
                 << gttpkt.protocol << log::endl;
+            throw FailException("RRequestPacket", "Invalid GTT packet");
+        }
+        if (gttpkt.method.compare("RREP")) {
+            log::error << "RRequest: Invalid GTT method "
+                << gttpkt.method << log::endl;
             throw FailException("RRequestPacket", "Invalid GTT packet");
         }
 
@@ -57,8 +62,8 @@ namespace iom
     }
 
     void RRequestPacket::fillGTTPacket(GTTPacket &gttpkt) const {
-        gttpkt.protocol = "RREQ";
-        gttpkt.method = "";
+        gttpkt.protocol = "MESH";
+        gttpkt.method = "RREQ";
         gttpkt.headers["Source"] = source.toString();
         gttpkt.headers["Destination"] = destination.toString();
         gttpkt.headers["N"] = String::fromInt(n);
