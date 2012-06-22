@@ -1,0 +1,97 @@
+l Probleme à gerer : Identifier les gens : IPv4? IPv6? autre?
+
+
+Une fois fait, reprendre ce qu’on a fait ce matin (01/06).
+
+Idée de svyat : intercepter tous les paquets, garder ceux qui nous concernent, s’amuser avec.
+
+Possibilité : sous-reseau en 10.x.y.z ←Empeche la méthode réactive. Nous oblige à la méthode proactive.
+
+Autre Possibilité : pseudo+MAC Addr ← Comment lire les packets? On en revient à l’idée de svyat.
+
+Comment on associe les pseudos aux identifiants des noeuds ? Equivalent de serveur DNS ? ← En a-t-on vraiment besoin? on peut pas laisser ça à la couche au dessus?
+
+Comment se passent les communications Ad Hoc ? On peut écouter et envoyer sur le wifi sur une fréquence établie.
+
+Comment utiliser les interfaces TAP ?
+
+Messages transmis
+Hello, entrée sur le reseau, oupa...
+Les autres accusent réception en disant “How are you ? :)” et font un DOS sans faire exprès
+
+
+
+
+Décisions / Rappels
+On travaille au niveau / en parallèle d’IP (IP over IPv6), avec une carte Wifi adhoc
+Le mode Ad-Hoc sous un SSID unique permet de connecter tout le monde sous le même réseau, sans que les paquets ne soient retransmis. 
+Identification par adresse IPv6 = hexa aléatoire (6 octets) + MAC addr, prefix fe80::/16
+Transmission des paquets en UDP port 1337
+On utilise la méthode réactive en utilisant la méthode vue en cours pour établir les routes en broadcast.
+
+Routage : Réactif
+Commencer par broadcaster pour découvrir des voisins.
+
+
+
+
+Generic Text Template
+PROTOCOLE METHODE
+Clé: valeur
+Content-length: 4
+Clé: valeur
+
+blah
+
+Paquet RouteREQuest broadcasté
+MESH RREQ
+Source:
+Destination:
+Sender:
+N: (utilisé aussi en tant que TTL, limité pifométriquement à 100)
+
+Paquet RouteREPly unicasté
+MESH RREP
+Source:
+Destination:
+Sender:
+NextHop:
+N:
+
+Paquet PKT
+MESH PKT
+Source:
+Destination:
+NextHop:
+Seq:
+Content-length:
+
+[IP payload]
+
+Paquet ACK
+ACK
+Source: Identique à PKT
+Destination: Identique à PKT
+NextHop: Identique à PKT
+Seq: Identique à PKT
+
+Paquet NACK (Route error)
+NACK
+Source: Destination du PKT
+Destination: Source du PKT
+NextHop: Pour avoir unicast
+
+Paquet DOS
+DOS
+Content-length:
+
+<Heavy Payload, containing an ASCII Trollface>
+
+Liste d’éléments HEARD(A,B), 
+
+
+
+Ensuite, on utilise l’implémentation IPv6 du système pour transmettre les paquets à une interface TAP/TUN, surveillée par notre programme, qui fait des merveilles avec. ← Don’t ask, it’s magic!
+
+
+
