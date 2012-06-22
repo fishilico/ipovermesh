@@ -17,12 +17,12 @@ namespace iom
         if (gttpkt.protocol.compare("MESH")) {
             log::error << "RReply: Invalid GTT protocol "
                 << gttpkt.protocol << log::endl;
-            throw FailException("RReplyPacket", "Invalid GTT packet");
+            throw ParserException("RReplyPacket", "Invalid GTT packet");
         }
         if (gttpkt.method.compare("RREP")) {
             log::error << "RReply: Invalid GTT method "
                 << gttpkt.method << log::endl;
-            throw FailException("RReplyPacket", "Invalid GTT packet");
+            throw ParserException("RReplyPacket", "Invalid GTT packet");
         }
 
         // Parse headers
@@ -40,7 +40,7 @@ namespace iom
             } else {
                 log::error << "RReply: Unknown header "
                     << it->first << log::endl;
-                throw MinorException("RReplyPacket", "Invalid GTT header");
+                throw ParserException("RReplyPacket", "Invalid GTT header");
             }
         }
     }

@@ -16,12 +16,12 @@ namespace iom {
         if (gttpkt.protocol.compare("MESH")) {
             log::error << "ACK: Invalid GTT protocol "
                 << gttpkt.protocol << log::endl;
-            throw FailException("AckPacket", "Invalid GTT packet");
+            throw ParserException("AckPacket", "Invalid GTT packet");
         }
         if (gttpkt.method.compare("ACK")) {
             log::error << "ACK: Invalid GTT method "
                 << gttpkt.method << log::endl;
-            throw FailException("AckPacket", "Invalid GTT packet");
+            throw ParserException("AckPacket", "Invalid GTT packet");
         }
 
         // Parse headers
@@ -37,7 +37,7 @@ namespace iom {
             } else {
                 log::error << "ACK: Unknown header "
                     << it->first << log::endl;
-                throw MinorException("AckPacket", "Invalid GTT header");
+                throw ParserException("AckPacket", "Invalid GTT header");
             }
         }
     }
