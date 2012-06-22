@@ -24,10 +24,6 @@ namespace iom
          */
         RRequestPacket(const GTTPacket& gttpkt);
 
-        RRequestPacket(const RRequestPacket& pkt);
-
-        const RRequestPacket& operator=(const RRequestPacket& pkt);
-
         /**
          * @brief Build the raw text query for this packet
          * @note Please read GTTPacket::build documentation

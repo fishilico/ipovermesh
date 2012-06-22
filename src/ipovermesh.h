@@ -13,6 +13,7 @@
 
 #include "mesh/rreplypacket.h"
 #include "mesh/rrequestpacket.h"
+#include "mesh/pktpacket.h"
 #include "mesh/ackpacket.h"
 #include "mesh/nackpacket.h"
 

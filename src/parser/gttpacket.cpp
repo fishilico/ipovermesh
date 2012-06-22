@@ -7,12 +7,11 @@ namespace iom
 {
 
     GTTPacket::GTTPacket()
-    :size(0), body(NULL) {
+    :size(0), body() {
     }
 
-    GTTPacket::~GTTPacket() {
-        if (body)
-            delete[] body;
+    GTTPacket::GTTPacket(unsigned long size, const boost::shared_array<char>& body)
+    :size(size), body(body) {
     }
 
     std::ostream& operator<<(std::ostream& os, const GTTPacket& pkt) {
@@ -50,7 +49,10 @@ namespace iom
         unsigned long strSize = str.length();
         char *data = new char[strSize + size];
         strncpy(data, str.c_str(), strSize);
-        memcpy(data + strSize, body, size);
+        if (size > 0) {
+            BOOST_VERIFY(body.get() != NULL);
+            memcpy(data + strSize, body.get(), size);
+        }
         *newData = data;
         return strSize + size;
     }

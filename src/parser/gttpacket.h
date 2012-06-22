@@ -6,6 +6,7 @@
 #ifndef IOM_PARSER_GTTPACKET_H
 #define IOM_PARSER_GTTPACKET_H
 
+#include <boost/shared_array.hpp>
 #include <map>
 #include <string>
 #include <ostream>
@@ -25,8 +26,7 @@ namespace iom
          * @brief Constructor
          */
         GTTPacket();
-
-        ~GTTPacket();
+        GTTPacket(unsigned long size, const boost::shared_array<char>& body);
 
         /**
          * @brief Print a short packet desciption in an output stream (for debug)
@@ -63,7 +63,7 @@ namespace iom
         /**
          * @brief Content body
          */
-        const char *body;
+        boost::shared_array<char> body;
     };
 }
 

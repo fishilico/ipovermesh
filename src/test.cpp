@@ -14,7 +14,7 @@ void test_pkt() {
     RReplyPacket rrep(a1, a2, a1, a3, 42);
     size = rrep.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "RReply:\n" << data << log::endl;
+    log::debug << "RReply:\n" << std::string(data, size) << log::endl;
 
     // Read reply
     GTTParser parser;
@@ -25,6 +25,7 @@ void test_pkt() {
         log::debug << "RReply: " << rrep2.destination << log::endl;
     }
     delete[] data;
+    data = NULL;
 
     // ACK
     AckPacket ack(a1, a2, a3, 42);
@@ -38,6 +39,17 @@ void test_pkt() {
         AckPacket ack2(*gttpkt);
         log::debug << "ACK: " << ack2.destination << log::endl;
     }
+    delete[] data;
+    data = NULL;
+
+    // Pkt
+    std::string msg("Hello, world !");
+    char *carray = new char[msg.length()];
+    memcpy(carray, msg.c_str(), msg.length());
+    PktPacket pkt(a1, a2, a3, 42, msg.length(), boost::shared_array<char>(carray));
+    size = pkt.build(&data);
+    BOOST_VERIFY(data != NULL);
+    log::debug << "PKT:\n" << std::string(data, size) << log::endl;
     delete[] data;
 }
 

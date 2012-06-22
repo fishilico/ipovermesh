@@ -43,19 +43,6 @@ namespace iom
         }
     }
 
-    RRequestPacket::RRequestPacket(const RRequestPacket& pkt)
-    :source(pkt.source), destination(pkt.destination), n(pkt.n) {
-    }
-
-    const RRequestPacket& RRequestPacket::operator=(const RRequestPacket& pkt) {
-        if (this != &pkt) {
-            this->source = pkt.source;
-            this->destination = pkt.destination;
-            this->n = pkt.n;
-        }
-        return *this;
-    }
-
     unsigned long RRequestPacket::build(char **newData) const {
         BOOST_ASSERT(newData != NULL);
         // Build a GTT Packet to build

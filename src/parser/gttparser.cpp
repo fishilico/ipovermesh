@@ -83,7 +83,7 @@ namespace iom
                                 delete[] body;
                                 return NULL;
                             }
-                            currentPkt->body = body;
+                            currentPkt->body.reset(body);
                             body = NULL;
                         }
                         GTTPacket* pkt = currentPkt;
