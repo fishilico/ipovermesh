@@ -15,7 +15,8 @@ namespace iom
     class RRequestPacket : public SockPacket
     {
     public:
-        RRequestPacket(const Address& source, const Address& destination, unsigned int n);
+        RRequestPacket(const Address& source, const Address& destination,
+                const Address& sender, unsigned int n);
 
         /**
          * @brief Parse a GTT packet
@@ -36,6 +37,7 @@ namespace iom
         // Properties
         Address source;
         Address destination;
+        Address sender;
         unsigned int n;
     private:
         /**

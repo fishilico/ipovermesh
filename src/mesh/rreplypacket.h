@@ -16,7 +16,7 @@ namespace iom
     {
     public:
         RReplyPacket(const Address& source, const Address& destination,
-                const Address& nexthop, unsigned int n);
+                const Address& sender, const Address& nexthop, unsigned int n);
 
         /**
          * @brief Parse a GTT packet
@@ -37,6 +37,7 @@ namespace iom
         // Properties
         Address source;
         Address destination;
+        Address sender;
         Address nexthop;
         unsigned int n;
     private:

@@ -6,8 +6,8 @@ namespace iom
 {
 
     RReplyPacket::RReplyPacket(const Address& source, const Address& destination,
-        const Address& nexthop, unsigned int n)
-    :source(source), destination(destination), nexthop(nexthop), n(n) {
+        const Address& sender, const Address& nexthop, unsigned int n)
+    :source(source), destination(destination), sender(sender), nexthop(nexthop), n(n) {
     }
 
     RReplyPacket::RReplyPacket(const GTTPacket& gttpkt) {
@@ -31,6 +31,8 @@ namespace iom
                 source = Address(it->second);
             } else if (boost::iequals(it->first, "Destination")) {
                 destination = Address(it->second);
+            } else if (boost::iequals(it->first, "Sender")) {
+                sender = Address(it->second);
             } else if (boost::iequals(it->first, "NextHop")) {
                 nexthop = Address(it->second);
             } else if (boost::iequals(it->first, "N")) {
@@ -70,6 +72,7 @@ namespace iom
         gttpkt.method = "RREP";
         gttpkt.headers["Source"] = source.toString();
         gttpkt.headers["Destination"] = destination.toString();
+        gttpkt.headers["Sender"] = sender.toString();
         gttpkt.headers["NextHop"] = nexthop.toString();
         gttpkt.headers["N"] = String::fromInt(n);
     }

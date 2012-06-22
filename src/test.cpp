@@ -11,7 +11,7 @@ void test_pkt() {
     unsigned long size;
 
     // Reply
-    RReplyPacket rrep(a1, a2, a3, 42);
+    RReplyPacket rrep(a1, a2, a1, a3, 42);
     size = rrep.build(&data);
     BOOST_VERIFY(data != NULL);
     log::debug << "RReply:\n" << data << log::endl;

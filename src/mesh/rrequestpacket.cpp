@@ -5,8 +5,9 @@
 namespace iom
 {
 
-    RRequestPacket::RRequestPacket(const Address& source, const Address& destination, unsigned int n)
-    :source(source), destination(destination), n(n) {
+    RRequestPacket::RRequestPacket(const Address& source, const Address& destination,
+        const Address& sender, unsigned int n)
+    :source(source), destination(destination), sender(sender), n(n) {
     }
 
     RRequestPacket::RRequestPacket(const GTTPacket& gttpkt) {
@@ -30,6 +31,8 @@ namespace iom
                 source = Address(it->second);
             } else if (boost::iequals(it->first, "Destination")) {
                 destination = Address(it->second);
+            } else if (boost::iequals(it->first, "Sender")) {
+                sender = Address(it->second);
             } else if (boost::iequals(it->first, "N")) {
                 n = String::toInt(it->second);
             } else {
@@ -66,6 +69,7 @@ namespace iom
         gttpkt.method = "RREQ";
         gttpkt.headers["Source"] = source.toString();
         gttpkt.headers["Destination"] = destination.toString();
+        gttpkt.headers["Sender"] = sender.toString();
         gttpkt.headers["N"] = String::fromInt(n);
     }
 }
