@@ -25,6 +25,20 @@ void test_pkt() {
         log::debug << "RReply: " << rrep2.destination << log::endl;
     }
     delete[] data;
+
+    // ACK
+    AckPacket ack(a1, a2, a3, 42);
+    size = ack.build(&data);
+    BOOST_VERIFY(data != NULL);
+    log::debug << "ACK:\n" << data << log::endl;
+
+    // Read ACK
+    parser.eat(data, size);
+    while ((gttpkt = parser.getPacket()) != NULL) {
+        AckPacket ack2(*gttpkt);
+        log::debug << "ACK: " << ack2.destination << log::endl;
+    }
+    delete[] data;
 }
 
 int main() {

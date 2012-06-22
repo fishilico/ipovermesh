@@ -13,6 +13,8 @@
 
 #include "mesh/rreplypacket.h"
 #include "mesh/rrequestpacket.h"
+#include "mesh/ackpacket.h"
+#include "mesh/nackpacket.h"
 
 #endif /* IPOVERMESH_H */
 
