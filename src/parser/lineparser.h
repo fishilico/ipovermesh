@@ -53,7 +53,7 @@ namespace iom
          * @param size data size
          * @return true if there is enough internal data
          */
-        bool popData(char *data, long size);
+        bool popData(unsigned char *data, long size);
 
     private:
         /**

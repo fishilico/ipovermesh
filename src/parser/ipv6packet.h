@@ -1,6 +1,7 @@
 #ifndef IPV6PACKET_H
 #define IPV6PACKET_H
 
+#include <boost/shared_array.hpp>
 #include "../net/address.h"
 
 namespace iom {
@@ -8,8 +9,8 @@ namespace iom {
     class IPv6Packet
     {
     public:
-        IPv6Packet(unsigned char* data, int size);
-        const unsigned char* getData() const;
+        IPv6Packet(const boost::shared_array<unsigned char>& data, int size);
+        const boost::shared_array<unsigned char>& getData() const;
         int getSize() const;
         const Address getSourceAddress() const;
         void setSourceAddress(const Address &address);
@@ -19,7 +20,7 @@ namespace iom {
     private:
         std::string convertToHexa(unsigned char octet) const;
         unsigned char convertFromHexa(std::string hexa) const;
-        unsigned char* data;
+        boost::shared_array<unsigned char> data;
         int size;
     };
 }

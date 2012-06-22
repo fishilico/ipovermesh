@@ -26,7 +26,7 @@ namespace iom
          * @brief Constructor
          */
         GTTPacket();
-        GTTPacket(unsigned long size, const boost::shared_array<char>& body);
+        GTTPacket(unsigned long size, const boost::shared_array<unsigned char>& body);
 
         /**
          * @brief Print a short packet desciption in an output stream (for debug)
@@ -42,7 +42,7 @@ namespace iom
          *
          * Note: Please delete *newData with delete[]
          */
-        unsigned long build(char **newData) const;
+        unsigned long build(unsigned char **newData) const;
 
         /**
          * @brief Protocol name
@@ -63,7 +63,7 @@ namespace iom
         /**
          * @brief Content body
          */
-        boost::shared_array<char> body;
+        boost::shared_array<unsigned char> body;
     };
 }
 

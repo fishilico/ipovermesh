@@ -7,14 +7,14 @@ void test_pkt() {
     const Address a1("42.13.37.1");
     const Address a2("42.13.37.2");
     const Address a3("42.13.37.3");
-    char *data = NULL;
+    unsigned char *data = NULL;
     unsigned long size;
 
     // Reply
     RReplyPacket rrep(a1, a2, a1, a3, 42);
     size = rrep.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "RReply:\n" << std::string(data, size) << log::endl;
+    log::debug << "RReply:\n" << std::string((const char*)data, size) << log::endl;
 
     // Read reply
     GTTParser parser;
@@ -31,7 +31,7 @@ void test_pkt() {
     AckPacket ack(a1, a2, a3, 42);
     size = ack.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "ACK:\n" << data << log::endl;
+    log::debug << "ACK:\n" << std::string((const char*)data, size) << log::endl;
 
     // Read ACK
     parser.eat(data, size);
@@ -44,12 +44,12 @@ void test_pkt() {
 
     // Pkt
     std::string msg("Hello, world !");
-    char *carray = new char[msg.length()];
+    unsigned char *carray = new unsigned char[msg.length()];
     memcpy(carray, msg.c_str(), msg.length());
-    PktPacket pkt(a1, a2, a3, 42, msg.length(), boost::shared_array<char>(carray));
+    PktPacket pkt(a1, a2, a3, 42, msg.length(), boost::shared_array<unsigned char>(carray));
     size = pkt.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "PKT:\n" << std::string(data, size) << log::endl;
+    log::debug << "PKT:\n" << std::string((const char*)data, size) << log::endl;
     delete[] data;
 }
 

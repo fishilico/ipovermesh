@@ -58,7 +58,7 @@ namespace iom
         return false;
     }
 
-    bool LineParser::popData(char *data, long size) {
+    bool LineParser::popData(unsigned char *data, long size) {
         BOOST_ASSERT(data != NULL && size > 0);
 
         // Not enough bytes in the buffer

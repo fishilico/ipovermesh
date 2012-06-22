@@ -20,7 +20,7 @@ namespace iom
          *
          * Note: Please delete *newData with delete[]
          */
-        virtual unsigned long build(char **newData) const = 0;
+        virtual unsigned long build(unsigned char **newData) const = 0;
 
         /**
          * @brief Send packet with a Socket

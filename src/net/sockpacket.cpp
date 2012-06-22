@@ -6,7 +6,7 @@ namespace iom
 
     bool SockPacket::send(Socket& sock) const {
         // Build data
-        char *gttdata = NULL;
+        unsigned char *gttdata = NULL;
         unsigned long gttsize = this->build(&gttdata);
 
         if (gttdata == NULL) {

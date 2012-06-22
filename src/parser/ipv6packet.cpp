@@ -3,7 +3,7 @@
 #include "../core/log.h"
 
 namespace iom {
-    IPv6Packet::IPv6Packet(unsigned char* data, int size) :
+    IPv6Packet::IPv6Packet(const boost::shared_array<unsigned char>& data, int size) :
         data(data),
         size(size)
     {
@@ -11,7 +11,7 @@ namespace iom {
             throw FailException("IPv6Packet", "Data is not an IPv6 packet.");
     }
 
-    const unsigned char* IPv6Packet::getData() const {
+    const boost::shared_array<unsigned char>& IPv6Packet::getData() const {
         return data;
     }
 

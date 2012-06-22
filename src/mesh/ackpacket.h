@@ -21,7 +21,7 @@ namespace iom{
          * @brief Build the raw text query for this packet
          * @note Please read GTTPacket::build documentation
          */
-        unsigned long build(char **newData) const;
+        unsigned long build(unsigned char **newData) const;
 
         // Properties
         Address source;

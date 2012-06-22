@@ -7,7 +7,7 @@ namespace iom
 
     PktPacket::PktPacket(const Address& source, const Address& destination,
         const Address& nexthop, unsigned int seq,
-        unsigned long size, const boost::shared_array<char>& data)
+        unsigned long size, const boost::shared_array<unsigned char>& data)
     :source(source), destination(destination), nexthop(nexthop), seq(seq),
     size(size), data(data) {
     }
@@ -49,7 +49,13 @@ namespace iom
         data = gttpkt.body;
     }
 
-    unsigned long PktPacket::build(char **newData) const {
+    PktPacket::PktPacket(const IPv6Packet& ippkt, const Address& nexthop, unsigned int seq)
+    :source(ippkt.getSourceAddress()),
+    destination(ippkt.getDestinationAddress()),
+    nexthop(nexthop), seq(seq), size(ippkt.getSize()), data(ippkt.getData()) {
+    }
+
+    unsigned long PktPacket::build(unsigned char **newData) const {
         BOOST_ASSERT(newData != NULL);
         // Build a GTT Packet to build
         GTTPacket gttpkt(size, data);

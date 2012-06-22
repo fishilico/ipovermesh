@@ -10,7 +10,7 @@ namespace iom
     :size(0), body() {
     }
 
-    GTTPacket::GTTPacket(unsigned long size, const boost::shared_array<char>& body)
+    GTTPacket::GTTPacket(unsigned long size, const boost::shared_array<unsigned char>& body)
     :size(size), body(body) {
     }
 
@@ -27,7 +27,7 @@ namespace iom
         return os;
     }
 
-    unsigned long GTTPacket::build(char **newData) const {
+    unsigned long GTTPacket::build(unsigned char **newData) const {
         BOOST_ASSERT(newData != NULL);
         std::stringstream head;
         std::map<std::string, std::string>::const_iterator it;
@@ -47,8 +47,8 @@ namespace iom
         // Concatenate headers and content
         const std::string str = head.str();
         unsigned long strSize = str.length();
-        char *data = new char[strSize + size];
-        strncpy(data, str.c_str(), strSize);
+        unsigned char *data = new unsigned char[strSize + size];
+        memcpy(data, str.c_str(), strSize);
         if (size > 0) {
             BOOST_VERIFY(body.get() != NULL);
             memcpy(data + strSize, body.get(), size);

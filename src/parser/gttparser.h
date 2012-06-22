@@ -46,7 +46,7 @@ namespace iom
          * @param data data to eat
          * @param size available size
          */
-        void eat(const char *data, long size);
+        void eat(const unsigned char *data, long size);
 
         /**
          * @brief get the last read packet

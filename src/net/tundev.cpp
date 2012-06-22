@@ -68,8 +68,8 @@ namespace iom
     }
 
     IPv6Packet Tundev::readPacket() {
-        unsigned char data[mtu];
-        int size = read(data, mtu);
+        boost::shared_array<unsigned char> data(new unsigned char[mtu]);
+        int size = read(data.get(), mtu);
         return IPv6Packet(data, size);
     }
 
@@ -78,6 +78,6 @@ namespace iom
     }
 
     bool Tundev::writePacket(const IPv6Packet &data) {
-        return write(data.getData(), data.getSize()) == data.getSize();
+        return this->write(data.getData().get(), data.getSize()) == data.getSize();
     }
 }

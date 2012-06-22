@@ -41,9 +41,9 @@ namespace iom
         }
     }
 
-    void GTTParser::eat(const char *data, long size) {
+    void GTTParser::eat(const unsigned char *data, long size) {
         BOOST_ASSERT(data != NULL && size > 0);
-        lineParser.push(data, size);
+        lineParser.push((const char*)data, size);
     }
 
     GTTPacket* GTTParser::getPacket() {
@@ -78,7 +78,7 @@ namespace iom
                     case dataposContent:
                         if (currentPkt->size > 0) {
                             // Read body
-                            char *body = new char[currentPkt->size];
+                            unsigned char *body = new unsigned char[currentPkt->size];
                             if (!lineParser.popData(body, currentPkt->size)) {
                                 delete[] body;
                                 return NULL;

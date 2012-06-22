@@ -43,7 +43,7 @@ namespace iom
         }
     }
 
-    unsigned long RRequestPacket::build(char **newData) const {
+    unsigned long RRequestPacket::build(unsigned char **newData) const {
         BOOST_ASSERT(newData != NULL);
         // Build a GTT Packet to build
         GTTPacket gttpkt;

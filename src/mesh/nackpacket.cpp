@@ -40,7 +40,7 @@ namespace iom {
         }
     }
 
-    unsigned long NAckPacket::build(char **newData) const {
+    unsigned long NAckPacket::build(unsigned char **newData) const {
         BOOST_ASSERT(newData != NULL);
         // Build a GTT Packet to build
         GTTPacket gttpkt;
