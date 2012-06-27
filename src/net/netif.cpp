@@ -54,6 +54,14 @@ namespace iom
         return name;
     }
 
+    const Address& NetIf::getAddress() const {
+        return addr;
+    }
+
+    const Address& NetIf::getBroadcast() const {
+        return broadcast;
+    }
+
     std::vector<NetIf> NetIf::getAllNet() {
         std::vector<NetIf> ifaces;
         struct ifaddrs *ifAddrStruct = NULL;

@@ -5,7 +5,7 @@
 
 namespace iom {
 
-    Route::Route(const Address &destination, const Address &nextHop, int hops) :
+    Route::Route(const Address &destination, const Address &nextHop, unsigned int hops) :
         destination(destination), nextHop(nextHop), hops(hops), createTime(boost::posix_time::second_clock::local_time())
     {
     }

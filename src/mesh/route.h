@@ -9,12 +9,12 @@ namespace iom {
     class Route
     {
     public:
-        Route(const Address &destination, const Address &nextHop, int hops);
+        Route(const Address &destination, const Address &nextHop, unsigned int hops);
         bool hasExpired();
 
         const Address destination;
         const Address nextHop;
-        const int hops;
+        const unsigned int hops;
 
     private:
         const boost::posix_time::ptime createTime;

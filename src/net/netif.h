@@ -30,6 +30,10 @@ namespace iom
 
         const std::string& getName() const;
 
+        const Address& getAddress() const;
+
+        const Address& getBroadcast() const;
+
         /**
          * @brief Get all interfaces on the system
          */
