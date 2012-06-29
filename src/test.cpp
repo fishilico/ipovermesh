@@ -1,6 +1,8 @@
 #include "ipovermesh.h"
 #include "parser/gttparser.h"
 #include "net/ctlsocket.h"
+#include "mesh/ackpacket.h"
+#include "mesh/rreplypacket.h"
 
 using namespace iom;
 

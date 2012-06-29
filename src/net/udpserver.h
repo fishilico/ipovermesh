@@ -23,6 +23,8 @@ namespace iom
          */
         UDPServer(const SockAddress& addr);
 
+        virtual void close();
+
         /**
          * @brief Receive data for the server
          *

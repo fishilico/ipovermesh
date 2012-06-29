@@ -72,7 +72,7 @@ namespace iom
     boost::shared_ptr<IPv6Packet> Tundev::readPacket() {
         boost::shared_array<unsigned char> data(new unsigned char[mtu]);
         int size = read(data.get(), mtu);
-        if (size < 0)
+        if (size <= 0)
             return boost::shared_ptr<IPv6Packet > ();
         return boost::shared_ptr<IPv6Packet > (new IPv6Packet(data, size));
     }

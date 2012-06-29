@@ -48,6 +48,12 @@ namespace iom
         if (bytes < 0)
             throw ErrException("UDPSocket", "recvfrom");
 
+        if (bytes == 0) {
+            //Socket is now closed
+            BOOST_VERIFY(sock < 0);
+            return 0;
+        }
+
         /**
          * recv doesn't set the after-the-last byte to zero. We must do it to
          * avoid some issues.

@@ -148,7 +148,7 @@ namespace iom
              * @return this
              */
             Stream& operator<<(const ErrstdStruct& f);
-            
+
             /**
              * @brief Append a message
              * @param str message
@@ -179,7 +179,7 @@ namespace iom
             void write(const std::string& message, Level level);
             void flush(bool wait);
             void quit();
-            
+
             friend Stream& Stream::operator<<(const EndlStruct& f);
             friend Stream& Stream::appendMessage(const std::string& msg);
 
@@ -210,7 +210,7 @@ namespace iom
         };
 
         extern Worker worker;
-    }    
+    }
 }
 
 #include "log-detail.h"

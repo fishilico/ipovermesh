@@ -14,6 +14,11 @@ namespace iom
         sock.setLocalAddress(address);
     }
 
+    void UDPServer::close() {
+        sockfd = -1;
+        sock.close();
+    }
+
     int UDPServer::recv(void *data, int size) {
         int r = sock.recv(data, size);
         //sock.setAddress(sock.getLastRecvAddr());// This is not thread-safe

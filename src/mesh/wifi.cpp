@@ -1,5 +1,8 @@
 #include "wifi.h"
-#include "../ipovermesh.h"
+#include "ackpacket.h"
+#include "rreplypacket.h"
+#include "rrequestpacket.h"
+#include "../core/common.h"
 #include "../parser/gttparser.h"
 #include "../net/ctlsocket.h"
 #include <boost/interprocess/detail/atomic.hpp>
@@ -35,15 +38,18 @@ namespace iom {
 
                 srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));
 
-                cleaningThread = new boost::thread(boost::bind(&Wifi::clearOutdatedPacketsLoop, this, 10));
+                cleaningThread = new boost::thread(boost::bind(&Wifi::clearOutdatedPacketsLoop, this, 1));
                 return;
             }
         }
         throw FailException("Wifi", "No active wifi interface with IPv4 address");
     }
 
-    Wifi::~Wifi()
-    {
+    Wifi::~Wifi() {
+        close();
+    }
+
+    void Wifi::close() {
         recvQueue.close();
         if (server != NULL) {
             if (server->isBinded()) {
@@ -52,56 +58,69 @@ namespace iom {
                 server->close();
                 srvThread->join();
                 delete srvThread;
+                srvThread = NULL;
 
                 // And stop cleanup thread
                 if (cleaningThread != NULL) {
                     cleaningThread->join();
                     delete cleaningThread;
+                    cleaningThread = NULL;
                 }
             }
             delete server;
+            server = NULL;
         }
         if (broadcastSocket != NULL)
             delete broadcastSocket;
+        broadcastSocket = NULL;
     }
 
     void Wifi::recvRun()
     {
-        GTTParser parser;
-        int size;
-        unsigned char data[2000];
-        GTTPacket* packet;
-        BOOST_ASSERT(server != NULL);
+        log::setThreadName("WifiRecv");
+        try {
+            GTTParser parser;
+            int size;
+            unsigned char data[2000];
+            GTTPacket* packet;
+            BOOST_ASSERT(server != NULL);
 
-        // Run until someone closes the server
-        while (server->isBinded())
-        {
-            try {
-                if((size = server->recv(data, 2000)) == -1)
-                {
-                    log::error << "Wifi: Error while reading data. " << log::errstd << log::endl;
-                    throw MinorException("Wifi", "Error while reading data");
+            // Run until someone closes the server
+            while (server->isBinded())
+            {
+                try {
+                    if((size = server->recv(data, 2000)) == -1)
+                    {
+                        log::error << "Wifi: Error while reading data. " << log::errstd << log::endl;
+                        throw MinorException("Wifi", "Error while reading data");
+                    }
+                    if (!server->isBinded()) {
+                        break;
+                    }
+                    log::debug << "Recv " << size<< "bytes" << log::endl;
+                    parser.eat(data, size);
+                    while((packet = parser.getPacket()) != NULL)
+                    {
+                        if(packet->method.compare("ACK"))
+                            receiveAck(packet);
+                        else if(packet->method.compare("NACK"))
+                            receiveNAck(packet);
+                        else if(packet->method.compare("RREQ"))
+                            receiveRRequest(packet);
+                        else if(packet->method.compare("RREP"))
+                            receiveRReply(packet);
+                        else if(packet->method.compare("PKT"))
+                            receivePkt(packet);
+                        else
+                            log::error << "Wifi: Unknown packet method " << packet->method << log::endl;
+                        delete packet;
+                    }
                 }
-                parser.eat(data, size);
-                while((packet = parser.getPacket()) != NULL)
-                {
-                    if(packet->method.compare("ACK"))
-                        receiveAck(packet);
-                    else if(packet->method.compare("NACK"))
-                        receiveNAck(packet);
-                    else if(packet->method.compare("RREQ"))
-                        receiveRRequest(packet);
-                    else if(packet->method.compare("RREP"))
-                        receiveRReply(packet);
-                    else if(packet->method.compare("PKT"))
-                        receivePkt(packet);
-                    else
-                        log::error << "Wifi: Unknown packet method " << packet->method << log::endl;
-                    delete packet;
-                }
+                catch(MinorException &e) {}
+                catch(ParserException &e) {}
             }
-            catch(MinorException &e) {}
-            catch(ParserException &e) {}
+        } catch (Exception e) {
+            log::error << "Wifi: error " << e << log::endl;
         }
     }
 
@@ -160,6 +179,14 @@ namespace iom {
 
     boost::shared_ptr<IPv6Packet> Wifi::recv() {
         return recvQueue.pop();
+    }
+
+    const Address& Wifi::getAddress() const {
+        return address;
+    }
+
+    const NetIf& Wifi::getInterface() const {
+        return interface;
     }
 
     void Wifi::clearOutdatedPackets()

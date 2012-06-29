@@ -29,7 +29,7 @@ namespace iom
 
         /**
          * @brief allocate and return a thread info structure
-         * @return 
+         * @return
          */
         static ThreadInfo* getThreadInfo() {
             ThreadInfo* ti = threadInfos.get();
@@ -161,7 +161,7 @@ namespace iom
 
         void Worker::run() {
             setThreadName("Log");
-            info << "Opening log" << endl;
+            this->internalPrint(LogEntry(LOGLVL_INFO, "Opening log"));
             while (entries.isOpened() || !entries.empty()) {
                 //Take all the elements from the queue with only one call
                 BlockingQueue<LogEntry>::TQueuePtr entriesQueue = entries.flush();

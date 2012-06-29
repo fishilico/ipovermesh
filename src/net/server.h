@@ -22,12 +22,12 @@ namespace iom
          * @param addr
          */
         Server(const SockAddress& addr);
-        ~Server();
+        virtual ~Server();
 
         /**
          * @brief Stop the server (shutdown + close)
          */
-        void close();
+        virtual void close();
 
         /**
          * @brief Tell wether server is binded or not

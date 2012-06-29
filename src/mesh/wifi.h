@@ -1,11 +1,13 @@
 #ifndef IOM_MESH_WIFI_H
 #define IOM_MESH_WIFI_H
 
+#include "nackpacket.h"
+#include "pktpacket.h"
+#include "routingtable.h"
+#include "../core/blocking-queue.h"
 #include "../net/udpserver.h"
 #include "../net/netif.h"
 #include "../parser/gttpacket.h"
-#include "routingtable.h"
-#include "../ipovermesh.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <map>
 
@@ -22,6 +24,8 @@ namespace iom {
         Wifi();
         ~Wifi();
 
+        void close();
+
         /**
          * @brief Attempts to send an IPv6Packet on the mesh
          * @details If a route exists to the destination, packet is sent.
@@ -37,6 +41,17 @@ namespace iom {
          * @return an IPv6 packet, or NULL if there was something wrong
          */
         boost::shared_ptr<IPv6Packet> recv();
+
+        /**
+         * @brief Return IPv6 address computed from the MAC address
+         * @return
+         */
+        const Address& getAddress() const;
+
+        /**
+         * @brief Get interface
+         */
+        const NetIf& getInterface() const;
 
     private:
         typedef boost::posix_time::ptime ptime;

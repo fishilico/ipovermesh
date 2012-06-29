@@ -18,3 +18,5 @@ file(GLOB_RECURSE sources src/core/*.cpp src/mesh/*.cpp src/net/*.cpp src/parser
 add_executable(test ${sources} src/test.cpp)
 target_link_libraries(test ${Boost_LIBRARIES})
 
+add_executable(ipovermesh ${sources} src/main.cpp)
+target_link_libraries(ipovermesh ${Boost_LIBRARIES})

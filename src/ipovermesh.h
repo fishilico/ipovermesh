@@ -11,11 +11,7 @@
 #include "net/tundev.h"
 #include "net/netif.h"
 
-#include "mesh/rreplypacket.h"
-#include "mesh/rrequestpacket.h"
-#include "mesh/pktpacket.h"
-#include "mesh/ackpacket.h"
-#include "mesh/nackpacket.h"
+#include "mesh/wifi.h"
 
 #endif /* IPOVERMESH_H */
 
