@@ -1,5 +1,5 @@
-#ifndef WIFI_H
-#define WIFI_H
+#ifndef IOM_MESH_WIFI_H
+#define IOM_MESH_WIFI_H
 
 #include "../net/udpserver.h"
 #include "../net/netif.h"
@@ -63,4 +63,4 @@ namespace iom {
     };
 }
 
-#endif // WIFI_H
+#endif // IOM_MESH_WIFI_H
