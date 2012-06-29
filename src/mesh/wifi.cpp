@@ -33,7 +33,9 @@ namespace iom {
                 SockAddress broadcastAddress(interface.getBroadcast(),1337);
                 broadcastSocket = new UDPSocket(broadcastAddress);
 
-                srvThread = new boost::thread(boost::bind(&Wifi::run, this));
+                srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));
+
+                cleaningThread = new boost::thread(boost::bind(&Wifi::clearOutdatedPacketsLoop, this, 10));
                 return;
             }
         }
@@ -49,6 +51,12 @@ namespace iom {
                 server->close();
                 srvThread->join();
                 delete srvThread;
+
+                // And stop cleanup thread
+                if (cleaningThread != NULL) {
+                    cleaningThread->join();
+                    delete cleaningThread;
+                }
             }
             delete server;
         }
@@ -56,7 +64,7 @@ namespace iom {
             delete broadcastSocket;
     }
 
-    void Wifi::run()
+    void Wifi::recvRun()
     {
         GTTParser parser;
         int size;
@@ -132,6 +140,23 @@ namespace iom {
         send(packet, route->nextHop);
     }
 
+    void Wifi::send(const IPv6Packet &packet, const Address &nextHop)
+    {
+        boost::uint32_t pktSeq = boost::interprocess::ipcdetail::atomic_inc32(&seq);
+        PktPacket pkt(packet, nextHop, pktSeq);
+        NAckPacket nack(address, packet.getDestinationAddress(), address);
+        send(pkt, nack);
+    }
+
+    void Wifi::send(const PktPacket &packet, const NAckPacket &nack)
+    {
+        packet.send(*broadcastSocket);
+        sequenceIdentifier sequence(packet.source, packet.seq);
+        boost::unique_lock<boost::shared_mutex> lock(ackMut);
+        pendingAcks.insert(std::pair<sequenceIdentifier,NAckPacket>(sequence, nack));
+        pendingAckSequences.insert(std::pair<ptime, sequenceIdentifier >(boost::posix_time::second_clock::local_time(),sequence));
+    }
+
     void Wifi::clearOutdatedPackets()
     {
         {
@@ -163,27 +188,10 @@ namespace iom {
 
     void Wifi::clearOutdatedPacketsLoop(unsigned int seconds)
     {
-        while (true) {
+        while (server->isBinded()) {
             clearOutdatedPackets();
-            sleep(10);
+            sleep(seconds);
         }
-    }
-
-    void Wifi::send(const IPv6Packet &packet, const Address &nextHop)
-    {
-        boost::uint32_t pktSeq = boost::interprocess::ipcdetail::atomic_inc32(&seq);
-        PktPacket pkt(packet, nextHop, pktSeq);
-        NAckPacket nack(address, packet.getDestinationAddress(), address);
-        send(pkt, nack);
-    }
-
-    void Wifi::send(const PktPacket &packet, const NAckPacket &nack)
-    {
-        packet.send(*broadcastSocket);
-        sequenceIdentifier sequence(packet.source, packet.seq);
-        boost::unique_lock<boost::shared_mutex> lock(ackMut);
-        pendingAcks.insert(std::pair<sequenceIdentifier,NAckPacket>(sequence, nack));
-        pendingAckSequences.insert(std::pair<ptime, sequenceIdentifier >(boost::posix_time::second_clock::local_time(),sequence));
     }
 
     void Wifi::receiveAck(GTTPacket *packet)
