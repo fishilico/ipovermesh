@@ -14,7 +14,12 @@ namespace iom {
     class Wifi : public boost::noncopyable
     {
     public:
-        Wifi();
+
+        /**
+         * @brief Constructor
+         * @param recvQueue Queue where packets from the WiFi are put
+         */
+        Wifi(const boost::shared_ptr<BlockingQueue<const IPv6Packet> >& recvQueue);
         ~Wifi();
 
         /**
@@ -73,6 +78,8 @@ namespace iom {
         NetIf interface;
         RoutingTable routingTable;
         boost::uint32_t seq;
+
+        boost::shared_ptr<BlockingQueue<const IPv6Packet> > recvQueue;
 
         boost::shared_mutex rrepMut;
         std::map<Address, ptime> pendingRReplies;

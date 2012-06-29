@@ -8,8 +8,8 @@
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
 
 namespace iom {
-    Wifi::Wifi() :
-        seq(0)
+    Wifi::Wifi(const boost::shared_ptr<BlockingQueue<const IPv6Packet> >& recvQueue)
+    :seq(0), recvQueue(recvQueue)
     {
         std::vector<NetIf> ifaces = NetIf::getWifiUp();
         for(std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++)
@@ -237,6 +237,8 @@ namespace iom {
         if(pkt.destination == address) {
             // TODO send to TUN
             log::debug << "Received a packet from " << pkt.source << log::endl;
+            IPv6Packet *pkt6 = new IPv6Packet(pkt.data, pkt.size);
+            recvQueue->push(boost::shared_ptr<const IPv6Packet>(pkt6));
             return;
         }
         boost::shared_ptr<Route> route = routingTable.getRoute(pkt.destination);
