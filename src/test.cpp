@@ -1,5 +1,6 @@
 #include "ipovermesh.h"
 #include "parser/gttparser.h"
+#include "net/ctlsocket.h"
 
 using namespace iom;
 
@@ -14,7 +15,7 @@ void test_pkt() {
     RReplyPacket rrep(a1, a2, a1, a3, 42);
     size = rrep.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "RReply:\n" << std::string((const char*)data, size) << log::endl;
+    log::debug << "RReply:\n" << std::string((const char*) data, size) << log::endl;
 
     // Read reply
     GTTParser parser;
@@ -31,7 +32,7 @@ void test_pkt() {
     AckPacket ack(a1, a2, a3, 42);
     size = ack.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "ACK:\n" << std::string((const char*)data, size) << log::endl;
+    log::debug << "ACK:\n" << std::string((const char*) data, size) << log::endl;
 
     // Read ACK
     parser.eat(data, size);
@@ -49,7 +50,7 @@ void test_pkt() {
     PktPacket pkt(a1, a2, a3, 42, msg.length(), boost::shared_array<unsigned char>(carray));
     size = pkt.build(&data);
     BOOST_VERIFY(data != NULL);
-    log::debug << "PKT:\n" << std::string((const char*)data, size) << log::endl;
+    log::debug << "PKT:\n" << std::string((const char*) data, size) << log::endl;
     delete[] data;
 }
 
@@ -69,6 +70,11 @@ int main() {
         log::info << "Active Wifi interfaces:" << log::endl;
         for (std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++) {
             log::info << "- " << *i << log::endl;
+        }
+        CtlSocket wifi("wlan0");
+        unsigned char hwaddr[6];
+        if (wifi.getHwAddr(hwaddr)) {
+            log::info << "wlan0, TUN IPv6 " << Address::fromHw(hwaddr) << log::endl;
         }
 
         test_pkt();

@@ -146,4 +146,34 @@ namespace iom
     bool operator<(const Address& addr1, const Address& addr2) {
         return addr1.compare(addr2) < 0;
     }
+
+    Address Address::fromHw(const unsigned char hwaddr[6]) {
+        struct sockaddr_in6 saddr;
+        unsigned char *ipv6 = saddr.sin6_addr.s6_addr;
+        saddr.sin6_family = AF_INET6;
+        saddr.sin6_flowinfo = 0;
+        saddr.sin6_scope_id = 0;
+        saddr.sin6_port = 0;
+
+        // Prefix fe80::/16
+        ipv6[0] = 0xfe;
+        ipv6[1] = 0x80;
+        // Random bytes
+        ipv6[2] = rand() & 0xff;
+        ipv6[3] = rand() & 0xff;
+        ipv6[4] = rand() & 0xff;
+        ipv6[5] = rand() & 0xff;
+        ipv6[6] = rand() & 0xff;
+        ipv6[7] = rand() & 0xff;
+        // MAC address
+        ipv6[8] = hwaddr[0];
+        ipv6[9] = hwaddr[1];
+        ipv6[10] = hwaddr[2];
+        ipv6[11] = 0xff;
+        ipv6[12] = 0xfe;
+        ipv6[13] = hwaddr[3];
+        ipv6[14] = hwaddr[4];
+        ipv6[15] = hwaddr[5];
+        return Address((struct sockaddr*) &saddr);
+    }
 }

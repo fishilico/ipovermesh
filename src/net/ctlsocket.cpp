@@ -35,9 +35,25 @@ namespace iom
         return this->ioctlReq(SIOCSIFMTU, ifr);
     }
 
+    int CtlSocket::getMTU() {
+        struct ifreq ifr;
+        if (!this->ioctlReq(SIOCGIFMTU, ifr))
+            return 0;
+        return ifr.ifr_mtu;
+    }
+
+    bool CtlSocket::getHwAddr(unsigned char hwaddr[6]) {
+        // ARPHRD_ETHER family
+        struct ifreq ifr;
+        if (!this->ioctlReq(SIOCGIFHWADDR, ifr))
+            return false;
+        memcpy(hwaddr, ifr.ifr_hwaddr.sa_data, 6);
+        return true;
+    }
+
     bool CtlSocket::activateInterface() {
         struct ifreq ifr;
-        if(!ioctlReq(SIOCGIFFLAGS, ifr))
+        if (!ioctlReq(SIOCGIFFLAGS, ifr))
             return false;
         ifr.ifr_flags = ifr.ifr_flags | IFF_UP;
         return (ioctlReq(SIOCSIFFLAGS, ifr));
@@ -46,7 +62,7 @@ namespace iom
     bool CtlSocket::ioctlReq(int request, struct ifreq& ifr) {
         BOOST_ASSERT(sock >= 0);
         strncpy(ifr.ifr_name, devname.c_str(), sizeof (ifr.ifr_name));
-        if ((ioctl(sock, request, &ifr)) < 0) {
+        if ((::ioctl(sock, request, &ifr)) < 0) {
             log::error << "Socket IO Ctl error: " << log::errstd << log::endl;
             return false;
         }

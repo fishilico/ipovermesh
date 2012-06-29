@@ -93,6 +93,13 @@ namespace iom
          */
         friend bool operator<(const Address& addr1, const Address& addr2);
 
+        /**
+         * @brief Build an IPv6 address from a MAC address
+         * @param hwaddr MAC address (6 bytes)
+         * @return IPv6 Address
+         */
+        static Address fromHw(const unsigned char hwaddr[6]);
+
     private:
         std::string ip;
         // 4 or 6
