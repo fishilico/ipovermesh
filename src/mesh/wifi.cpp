@@ -1,6 +1,7 @@
 #include "wifi.h"
 #include "../ipovermesh.h"
 #include "../parser/gttparser.h"
+#include "src/net/ctlsocket.h"
 
 #define RREQUEST_EXPIRATION_DELAY boost::posix_time::seconds(60)
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
@@ -15,21 +16,33 @@ namespace iom {
             if(i->getAddress().getVersion() == 4)
             {
                 interface = *i;
+
+                // Compute Tun address
+                CtlSocket ifaceSock(i->getName());
+                unsigned char hwaddr[6];
+                if (!ifaceSock.getHwAddr(hwaddr)) {
+                    throw FailException("Wifi", "Unable to retrieve an HW address");
+                }
+                address = Address::fromHw(hwaddr);
+
+                // Listen to this interface on UDP:1337
                 SockAddress bindAddress(interface.getAddress(), 1337);
                 server = new UDPServer(bindAddress);
+                // Send messages to everyone on UDP:1337
                 SockAddress broadcastAddress(interface.getBroadcast(),1337);
                 broadcastSocket = new UDPSocket(broadcastAddress);
                 return;
             }
         }
         throw FailException("Wifi", "No active wifi interface with IPv4 address");
-        //TODO Calculer l'adresse du tun
     }
 
     Wifi::~Wifi()
     {
-        delete server;
-        delete broadcastSocket;
+        if (server != NULL)
+            delete server;
+        if (broadcastSocket != NULL)
+            delete broadcastSocket;
     }
 
     void Wifi::run()
@@ -38,13 +51,15 @@ namespace iom {
         int size;
         unsigned char data[2000];
         GTTPacket* packet;
-        while(true)
+        BOOST_ASSERT(server != NULL);
+        // Run until someone closes the server
+        while (server->isBinded())
         {
             try {
                 if((size = server->recv(data, 2000)) == -1)
                 {
-                    log::error << "Wifi: Error while reading data." << log::errstd << log::endl;
-                    throw MinorException("Wifi", "Error while reading data.");
+                    log::error << "Wifi: Error while reading data. " << log::errstd << log::endl;
+                    throw MinorException("Wifi", "Error while reading data");
                 }
                 parser.eat(data, size);
                 while((packet = parser.getPacket()) != NULL)
@@ -75,13 +90,16 @@ namespace iom {
         boost::shared_ptr<Route> route = routingTable.getRoute(destination);
         if(route.get() == 0)
         {
+            // No known route. Let's discover one !
             std::map<Address, ptime>::iterator rreplyIt = pendingRReplies.find(destination);
             if(rreplyIt == pendingRReplies.end() || boost::posix_time::second_clock::local_time() - rreplyIt->second > RREQUEST_EXPIRATION_DELAY)
             {
+                // Sent a route request
                 RRequestPacket rreq(address, destination, address, 1);
                 rreq.send(*broadcastSocket);
                 pendingRReplies.insert(std::pair<Address, ptime>(destination, boost::posix_time::second_clock::local_time()));
             }
+
             std::map<Address, std::queue<IPv6Packet> >::iterator it = packetsToSend.find(destination);
             std::queue<IPv6Packet> queue;
             if(it != packetsToSend.end())
