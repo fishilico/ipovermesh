@@ -8,8 +8,8 @@
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
 
 namespace iom {
-    Wifi::Wifi(const boost::shared_ptr<BlockingQueue<const IPv6Packet> >& recvQueue)
-    :seq(0), recvQueue(recvQueue)
+    Wifi::Wifi()
+    :seq(0)
     {
         std::vector<NetIf> ifaces = NetIf::getWifiUp();
         for(std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++)
@@ -44,6 +44,7 @@ namespace iom {
 
     Wifi::~Wifi()
     {
+        recvQueue.close();
         if (server != NULL) {
             if (server->isBinded()) {
                 // Quit UDP server in a good way
@@ -157,6 +158,10 @@ namespace iom {
         pendingAckSequences.insert(std::pair<ptime, sequenceIdentifier >(boost::posix_time::second_clock::local_time(),sequence));
     }
 
+    boost::shared_ptr<IPv6Packet> Wifi::recv() {
+        return recvQueue.pop();
+    }
+
     void Wifi::clearOutdatedPackets()
     {
         {
@@ -235,10 +240,10 @@ namespace iom {
             return;
         }
         if(pkt.destination == address) {
-            // TODO send to TUN
-            log::debug << "Received a packet from " << pkt.source << log::endl;
+            log::debug << "[Wifi] Recv " << pkt.size << " bytes from " << pkt.source << log::endl;
             IPv6Packet *pkt6 = new IPv6Packet(pkt.data, pkt.size);
-            recvQueue->push(boost::shared_ptr<const IPv6Packet>(pkt6));
+            //recvQueue->push(boost::shared_ptr<const IPv6Packet>(pkt6));
+            recvQueue.push(pkt6);
             return;
         }
         boost::shared_ptr<Route> route = routingTable.getRoute(pkt.destination);

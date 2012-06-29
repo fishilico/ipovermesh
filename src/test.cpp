@@ -85,12 +85,14 @@ int main() {
         tun.activate();
         system("ifconfig -a");
         while (true) {
-            IPv6Packet p = tun.readPacket();
-            log::info << p.getSourceAddress() << "->" << p.getDestinationAddress() << log::endl;
-            Address source = p.getSourceAddress();
-            p.setSourceAddress(p.getDestinationAddress());
-            p.setDestinationAddress(source);
-            tun.writePacket(p);
+            boost::shared_ptr<IPv6Packet> p = tun.readPacket();
+            if (p.get() != 0) {
+                log::info << p->getSourceAddress() << "->" << p->getDestinationAddress() << log::endl;
+                Address source = p->getSourceAddress();
+                p->setSourceAddress(p->getDestinationAddress());
+                p->setDestinationAddress(source);
+                tun.writePacket(*p);
+            }
         }
     } catch (Exception e) {
         log::fatal << e << log::endl;

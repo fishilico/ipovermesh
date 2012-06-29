@@ -19,7 +19,7 @@ namespace iom {
          * @brief Constructor
          * @param recvQueue Queue where packets from the WiFi are put
          */
-        Wifi(const boost::shared_ptr<BlockingQueue<const IPv6Packet> >& recvQueue);
+        Wifi();
         ~Wifi();
 
         /**
@@ -32,6 +32,12 @@ namespace iom {
          */
         void send(const IPv6Packet &packet);
 
+        /**
+         * @brief Wait for a packet to be received
+         * @return an IPv6 packet, or NULL if there was something wrong
+         */
+        boost::shared_ptr<IPv6Packet> recv();
+
     private:
         typedef boost::posix_time::ptime ptime;
         typedef std::pair<Address, int> sequenceIdentifier;
@@ -41,7 +47,6 @@ namespace iom {
          */
         void recvRun();
         boost::thread* srvThread;
-
 
         /**
          * @brief Clears outdated packets
@@ -79,7 +84,8 @@ namespace iom {
         RoutingTable routingTable;
         boost::uint32_t seq;
 
-        boost::shared_ptr<BlockingQueue<const IPv6Packet> > recvQueue;
+        // Queue where received messages are saved
+        BlockingQueue<IPv6Packet> recvQueue;
 
         boost::shared_mutex rrepMut;
         std::map<Address, ptime> pendingRReplies;

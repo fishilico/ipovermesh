@@ -27,6 +27,10 @@ namespace iom
         return opened;
     }
 
+    template<typename T> bool BlockingQueue<T>::push(T *e) {
+        return push(TPtr(e));
+    }
+
     template<typename T> bool BlockingQueue<T>::push(TPtr e) {
         if (!opened) {
             return false;
@@ -55,7 +59,7 @@ namespace iom
             cond.wait(lock);
         }
         if (fifo.empty()) {
-            return NULL;
+            return TPtr();
         }
 
         // Continue to pop even if queue is closed

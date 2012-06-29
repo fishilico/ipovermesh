@@ -21,6 +21,12 @@ namespace iom
          */
         Tundev(const std::string& devname = "");
         ~Tundev();
+
+        /**
+         * Close the tundev
+         */
+        void close();
+
         /**
          * @brief Configures the MTU for this device
          * @param mtu
@@ -44,9 +50,9 @@ namespace iom
         int read(void *__buf, size_t __nbytes);
         /**
          * @brief Reads an IPv6 packet from the device and returns it.
-         * @return
+         * @return ptr to IPv6 packet, or NULL on error
          */
-        IPv6Packet readPacket();
+        boost::shared_ptr<IPv6Packet> readPacket();
         /**
          * @brief Writes at most __nbytes to the device from __buf and returns the number of bytes written.
          * @param __buf
@@ -60,7 +66,6 @@ namespace iom
          * @return True on success, false otherwise.
          */
         bool writePacket(const IPv6Packet &data);
-
 
     private:
         // File descriptor to device

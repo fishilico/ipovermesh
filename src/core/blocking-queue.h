@@ -65,6 +65,13 @@ namespace iom
          * @param e a pointer to the element to push
          * @return false if the queue is closed, true otherwise
          */
+        bool push(T *e);
+
+        /**
+         * @brief Push an element on the queue, the synchronous way
+         * @param e a pointer to the element to push
+         * @return false if the queue is closed, true otherwise
+         */
         bool push(TPtr e);
 
         /**
