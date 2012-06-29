@@ -1,7 +1,8 @@
 #include "wifi.h"
 #include "../ipovermesh.h"
 #include "../parser/gttparser.h"
-#include "src/net/ctlsocket.h"
+#include "../net/ctlsocket.h"
+#include <boost/interprocess/detail/atomic.hpp>
 
 #define RREQUEST_EXPIRATION_DELAY boost::posix_time::seconds(60)
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
@@ -31,6 +32,8 @@ namespace iom {
                 // Send messages to everyone on UDP:1337
                 SockAddress broadcastAddress(interface.getBroadcast(),1337);
                 broadcastSocket = new UDPSocket(broadcastAddress);
+
+                srvThread = new boost::thread(boost::bind(&Wifi::run, this));
                 return;
             }
         }
@@ -39,8 +42,16 @@ namespace iom {
 
     Wifi::~Wifi()
     {
-        if (server != NULL)
+        if (server != NULL) {
+            if (server->isBinded()) {
+                // Quit UDP server in a good way
+                BOOST_VERIFY(srvThread != NULL);
+                server->close();
+                srvThread->join();
+                delete srvThread;
+            }
             delete server;
+        }
         if (broadcastSocket != NULL)
             delete broadcastSocket;
     }
@@ -52,6 +63,7 @@ namespace iom {
         unsigned char data[2000];
         GTTPacket* packet;
         BOOST_ASSERT(server != NULL);
+
         // Run until someone closes the server
         while (server->isBinded())
         {
@@ -91,15 +103,21 @@ namespace iom {
         if(route.get() == 0)
         {
             // No known route. Let's discover one !
-            std::map<Address, ptime>::iterator rreplyIt = pendingRReplies.find(destination);
-            if(rreplyIt == pendingRReplies.end() || boost::posix_time::second_clock::local_time() - rreplyIt->second > RREQUEST_EXPIRATION_DELAY)
             {
-                // Sent a route request
-                RRequestPacket rreq(address, destination, address, 1);
-                rreq.send(*broadcastSocket);
-                pendingRReplies.insert(std::pair<Address, ptime>(destination, boost::posix_time::second_clock::local_time()));
+                boost::upgrade_lock<boost::shared_mutex> lock(rrepMut);
+                std::map<Address, ptime>::iterator rreplyIt = pendingRReplies.find(destination);
+                if(rreplyIt == pendingRReplies.end() || boost::posix_time::second_clock::local_time() - rreplyIt->second > RREQUEST_EXPIRATION_DELAY)
+                {
+                    boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
+                    // Sent a route request
+                    RRequestPacket rreq(address, destination, address, 1);
+                    rreq.send(*broadcastSocket);
+                    pendingRReplies.insert(std::pair<Address, ptime>(destination, boost::posix_time::second_clock::local_time()));
+                }
             }
 
+            // Add the packet in the waiting queue
+            boost::unique_lock<boost::shared_mutex> ulock(pktMut);
             std::map<Address, std::queue<IPv6Packet> >::iterator it = packetsToSend.find(destination);
             std::queue<IPv6Packet> queue;
             if(it != packetsToSend.end())
@@ -116,16 +134,22 @@ namespace iom {
 
     void Wifi::clearOutdatedPackets()
     {
-        while(true) {
+        {
+            boost::upgrade_lock<boost::shared_mutex> lock(rrepMut);
             for(std::map<Address, ptime>::iterator it = pendingRReplies.begin(); it != pendingRReplies.end(); it++)
             {
                 if(boost::posix_time::second_clock::local_time() - it->second > RREQUEST_EXPIRATION_DELAY)
                 {
+                    boost::unique_lock<boost::shared_mutex> ulockPkt(pktMut);
                     std::map<Address, std::queue<IPv6Packet> >::iterator packetQueue = packetsToSend.find(it->first);
                     packetsToSend.erase(packetQueue);
+                    boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
                     pendingRReplies.erase(it);
                 }
             }
+        }
+        {
+            boost::unique_lock<boost::shared_mutex> lock(ackMut);
             std::map<ptime, sequenceIdentifier>::iterator sequencesIt = pendingAckSequences.begin();
             while(sequencesIt != pendingAckSequences.end() && boost::posix_time::second_clock::local_time() - sequencesIt->first > ACK_EXPIRATION_DELAY)
             {
@@ -134,14 +158,21 @@ namespace iom {
                 pendingAcks.erase(nackIt);
                 pendingAckSequences.erase(sequencesIt);
             }
+        }
+    }
+
+    void Wifi::clearOutdatedPacketsLoop(unsigned int seconds)
+    {
+        while (true) {
+            clearOutdatedPackets();
             sleep(10);
         }
     }
 
     void Wifi::send(const IPv6Packet &packet, const Address &nextHop)
     {
-        PktPacket pkt(packet, nextHop, seq);
-        seq++;
+        boost::uint32_t pktSeq = boost::interprocess::ipcdetail::atomic_inc32(&seq);
+        PktPacket pkt(packet, nextHop, pktSeq);
         NAckPacket nack(address, packet.getDestinationAddress(), address);
         send(pkt, nack);
     }
@@ -150,6 +181,7 @@ namespace iom {
     {
         packet.send(*broadcastSocket);
         sequenceIdentifier sequence(packet.source, packet.seq);
+        boost::unique_lock<boost::shared_mutex> lock(ackMut);
         pendingAcks.insert(std::pair<sequenceIdentifier,NAckPacket>(sequence, nack));
         pendingAckSequences.insert(std::pair<ptime, sequenceIdentifier >(boost::posix_time::second_clock::local_time(),sequence));
     }
@@ -159,6 +191,7 @@ namespace iom {
         AckPacket ack(*packet);
         if(ack.nexthop != address)
             return;
+        boost::unique_lock<boost::shared_mutex> lock(ackMut);
         std::map<std::pair<Address,int>, NAckPacket>::iterator nackIt = pendingAcks.find(sequenceIdentifier(ack.source, ack.seq));
         if(nackIt == pendingAcks.end())
         {
@@ -189,12 +222,17 @@ namespace iom {
     void Wifi::receivePkt(GTTPacket *packet)
     {
         PktPacket pkt(*packet);
-        if(pkt.nexthop != address)
+        if(pkt.nexthop != address) {
+            // Ignore Mesh unicast from Wifi broadcast
             return;
-        if(pkt.destination == address)
-            return;// TODO send to TUN
+        }
+        if(pkt.destination == address) {
+            // TODO send to TUN
+            log::debug << "Received a packet from " << pkt.source << log::endl;
+            return;
+        }
         boost::shared_ptr<Route> route = routingTable.getRoute(pkt.destination);
-        NAckPacket nack(pkt.destination,pkt.source, route->nextHop);
+        NAckPacket nack(pkt.destination, pkt.source, route->nextHop);
         if(route.get() == 0)
         {
             log::error << "Wifi: No route to forward PKT" << log::endl;
@@ -222,14 +260,17 @@ namespace iom {
         routingTable.addRoute(boost::shared_ptr<Route>(toNextHop));
         if(rrep.destination == address)
         {
+            boost::upgrade_lock<boost::shared_mutex> lock(pktMut);
             std::map<Address, std::queue<IPv6Packet> >::iterator toSend = packetsToSend.find(rrep.source);
             if(toSend != packetsToSend.end())
             {
                 while(toSend->second.empty())
                 {
                     send(toSend->second.front(), rrep.sender);
+                    boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
                     toSend->second.pop();
                 }
+                boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
                 packetsToSend.erase(toSend);
             }
             return;

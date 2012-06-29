@@ -3,6 +3,7 @@
 
 #include "route.h"
 #include <map>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace iom {
 
@@ -34,6 +35,7 @@ namespace iom {
 
     private:
        std::map<Address,boost::shared_ptr<Route> > routes;
+       boost::shared_mutex mut;
     };
 }
 

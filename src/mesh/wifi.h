@@ -16,7 +16,7 @@ namespace iom {
     public:
         Wifi();
         ~Wifi();
-        void run();
+
         /**
          * @brief Attempts to send an IPv6Packet on the mesh
          * @details If a route exists to the destination, packet is sent. Otherwise, an attempt is made to discover the route before sending it. If route is invalid, packet is lost.
@@ -24,13 +24,25 @@ namespace iom {
          */
         void send(const IPv6Packet &packet);
         /**
-         * @brief Clears outdated packets at regular intervals
+         * @brief Clears outdated packets
          */
         void clearOutdatedPackets();
+        /**
+         * @brief Clears outdated packets at regular intervals
+         * @param seconds time to sleep
+         */
+        void clearOutdatedPacketsLoop(unsigned int seconds);
 
     private:
         typedef boost::posix_time::ptime ptime;
         typedef std::pair<Address, int> sequenceIdentifier;
+
+        /**
+         * @brief Other thread to receive data from the WiFi interface
+         */
+        void run();
+        boost::thread* srvThread;
+
         /**
          * @brief Sends an IPv6Packet on the mesh
          * @param packet
@@ -54,11 +66,14 @@ namespace iom {
         UDPSocket* broadcastSocket;
         NetIf interface;
         RoutingTable routingTable;
-        unsigned int seq;
+        boost::uint32_t seq;
 
+        boost::shared_mutex rrepMut;
         std::map<Address, ptime> pendingRReplies;
+        boost::shared_mutex ackMut;
         std::map<ptime, sequenceIdentifier > pendingAckSequences;
         std::map<sequenceIdentifier, NAckPacket> pendingAcks;
+        boost::shared_mutex pktMut;
         std::map<Address, std::queue<IPv6Packet> > packetsToSend;
     };
 }
