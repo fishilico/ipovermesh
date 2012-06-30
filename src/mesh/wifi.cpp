@@ -29,12 +29,15 @@ namespace iom {
                 }
                 address = Address::fromHw(hwaddr);
 
+                // Enable broadcast
+                ifaceSock.enableBroadcast(true);
+
                 // Listen to this interface on UDP:1337
                 SockAddress bindAddress(interface.getAddress(), 1337);
                 server = new UDPServer(bindAddress);
-                // Send messages to everyone on UDP:1337
-                SockAddress broadcastAddress(interface.getBroadcast(),1337);
-                broadcastSocket = new UDPSocket(broadcastAddress);
+                // Send messages to everyone on UDP:1337 (with broadcast)
+                SockAddress broadcastAddress(interface.getBroadcast(), 1337);
+                broadcastSocket = new UDPSocket(broadcastAddress, true);
 
                 srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));
 

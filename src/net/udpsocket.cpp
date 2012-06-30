@@ -7,30 +7,53 @@ namespace iom
     UDPSocket::UDPSocket() {
     }
 
-    UDPSocket::UDPSocket(const SockAddress& addr)
+    UDPSocket::UDPSocket(const SockAddress& addr, bool isBroadcast)
     :Socket(addr) {
+        if (isBroadcast)
+            this->setBroadcast(true);
     }
 
     UDPSocket::UDPSocket(int sock, const SockAddress &addr)
     :Socket(sock, addr) {
     }
 
+    void UDPSocket::create() {
+        if (sock >= 0) {
+            // Do nothing, it already exists
+            return;
+        }
+        sock = ::socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock == -1)
+            throw ErrException("UDPSocket", "socket");
+        BOOST_VERIFY(sock >= 0);
+    }
+
+    void UDPSocket::setBroadcast(bool enable) {
+        if (sock < 0) {
+            this->create();
+        }
+        int boolean = (enable ? 1 : 0);
+        if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &boolean, sizeof (boolean))) {
+            throw ErrException("UDPSocket", "setsokopt(broadcast)");
+        }
+    }
+
     int UDPSocket::send(const void *data, int size) {
         int bytes;
         struct sockaddr_storage saddr;
 
-        BOOST_ASSERT(data != NULL);
         // Create a new socket if it does not exist
-        if (this->sock < 0) {
-            this->sock = ::socket(AF_INET, SOCK_DGRAM, 0);
-            if (this->sock == -1)
-                throw ErrException("UDPSocket", "socket");
+        if (sock < 0) {
+            this->create();
         }
+        BOOST_ASSERT(data != NULL && size >= 0);
         address.getSockAddr((struct sockaddr *) &saddr);
         bytes = ::sendto(this->sock, data, size, 0, (const struct sockaddr *) &saddr, sizeof (saddr));
         if (localAddress.empty())
             this->updateLocalAddress();
         // TODO: Implement status error (ex. Conn closed, ...)
+
+        log::debug << "UDP sent " << localAddress << " -> " << address << ", " << bytes << " bytes" << log::endl;
 
         if (bytes < 0)
             throw ErrException("UDPSocket", "sendto");
@@ -42,8 +65,8 @@ namespace iom
         struct sockaddr_storage saddr;
         socklen_t length = sizeof (saddr);
         BOOST_ASSERT(data != NULL);
-        BOOST_ASSERT(this->sock >= 0);
-        bytes = ::recvfrom(this->sock, data, size, 0, (struct sockaddr *) &saddr, &length);
+        BOOST_ASSERT(sock >= 0);
+        bytes = ::recvfrom(sock, data, size, 0, (struct sockaddr *) &saddr, &length);
         // TODO: Implement status error (eg. Conn closed, ...)
         if (bytes < 0)
             throw ErrException("UDPSocket", "recvfrom");

@@ -38,7 +38,7 @@ IpOverMesh::IpOverMesh() {
     log::info << "Starting Tun for " << tunaddr << "..." << log::endl;
     tun.setMTU(1300);
     tun.setIPv6(tunaddr);
-    tun.activate();
+    tun.activate(true);
     
     isRunning = true;
     tun2wifi = new boost::thread(boost::bind(&IpOverMesh::tun2wifiLoop, this));

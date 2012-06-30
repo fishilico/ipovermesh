@@ -40,7 +40,7 @@ namespace iom
         /**
          * @brief Activates this device
          */
-        void activate();
+        void activate(bool up);
         /**
          * @brief Reads at most __nbytes from the device in __buf and returns the number of bytes read.
          * @param __buf

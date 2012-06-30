@@ -51,12 +51,20 @@ namespace iom
         return true;
     }
 
-    bool CtlSocket::activateInterface() {
+    bool CtlSocket::activateInterface(bool up) {
         struct ifreq ifr;
         if (!ioctlReq(SIOCGIFFLAGS, ifr))
             return false;
-        ifr.ifr_flags = ifr.ifr_flags | IFF_UP;
-        return (ioctlReq(SIOCSIFFLAGS, ifr));
+        ifr.ifr_flags = (up ? ifr.ifr_flags | IFF_UP : ifr.ifr_flags & ~IFF_UP);
+        return ioctlReq(SIOCSIFFLAGS, ifr);
+    }
+
+    bool CtlSocket::enableBroadcast(bool enable) {
+        struct ifreq ifr;
+        if (!ioctlReq(SIOCGIFFLAGS, ifr))
+            return false;
+        ifr.ifr_flags = (enable ? ifr.ifr_flags | IFF_BROADCAST : ifr.ifr_flags & ~IFF_BROADCAST);
+        return ioctlReq(SIOCSIFFLAGS, ifr);
     }
 
     bool CtlSocket::ioctlReq(int request, struct ifreq& ifr) {

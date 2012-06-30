@@ -59,9 +59,9 @@ namespace iom
             throw FailException("TunDev", "Unable to set IP");
     }
 
-    void Tundev::activate() {
+    void Tundev::activate(bool up) {
         CtlSocket s(devname);
-        if (!s.activateInterface())
+        if (!s.activateInterface(up))
             throw FailException("TunDev", "Device could not be activated");
     }
 

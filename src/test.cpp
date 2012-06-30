@@ -84,7 +84,7 @@ int main() {
         Tundev tun;
         tun.setMTU(1300);
         tun.setIPv6(Address("aaaa::2"));
-        tun.activate();
+        tun.activate(true);
         system("ifconfig -a");
         while (true) {
             boost::shared_ptr<IPv6Packet> p = tun.readPacket();

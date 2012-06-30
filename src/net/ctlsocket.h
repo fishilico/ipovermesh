@@ -44,7 +44,9 @@ namespace iom
          */
         bool getHwAddr(unsigned char hwaddr[6]);
 
-        bool activateInterface();
+        bool activateInterface(bool up);
+
+        bool enableBroadcast(bool enable);
 
     private:
         bool ioctlReq(int request, struct ifreq& ifr);
