@@ -62,6 +62,10 @@ namespace iom
         return broadcast;
     }
 
+    bool NetIf::isUp() const {
+        return flags & IFF_UP;
+    }
+
     std::vector<NetIf> NetIf::getAllNet() {
         std::vector<NetIf> ifaces;
         struct ifaddrs *ifAddrStruct = NULL;
@@ -88,25 +92,6 @@ namespace iom
         for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
             if (name.compare(ifa->ifa_name) == 0) {
                 ifaces.push_back(NetIf(*ifa));
-            }
-        }
-        if (ifAddrStruct != NULL)
-            freeifaddrs(ifAddrStruct);
-        return ifaces;
-    }
-
-    std::vector<NetIf> NetIf::getWifiUp() {
-
-        std::vector<NetIf> ifaces;
-        struct ifaddrs *ifAddrStruct = NULL;
-        struct ifaddrs *ifa = NULL;
-
-        getifaddrs(&ifAddrStruct);
-        for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
-            if (ifa->ifa_addr != NULL && (ifa->ifa_flags & IFF_UP)
-                && (ifa->ifa_addr->sa_family == AF_INET || ifa->ifa_addr->sa_family == AF_INET6)) {
-                if (std::string(ifa->ifa_name).find("wlan") != std::string::npos)
-                    ifaces.push_back(NetIf(*ifa));
             }
         }
         if (ifAddrStruct != NULL)

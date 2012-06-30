@@ -10,7 +10,7 @@ using namespace iom;
 
 class IpOverMesh : private boost::noncopyable {
 public:
-    IpOverMesh();
+    IpOverMesh(const NetIf& wifiIface);
     ~IpOverMesh();
     void stop();
     
@@ -27,12 +27,13 @@ private:
     bool isRunning;
 };
 
-IpOverMesh::IpOverMesh() {
+IpOverMesh::IpOverMesh(const NetIf& wifiIface)
+:wifi(wifiIface)
+{
     // Start wifi interface
-    const NetIf iface = wifi.getInterface();
     const Address tunaddr = wifi.getAddress();
-    log::info << "WiFi started on " << iface.getName() << ", "
-        << iface.getAddress() << log::endl;
+    log::info << "WiFi started on " << wifiIface.getName() << ", "
+        << wifiIface.getAddress() << log::endl;
 
     // Start Tun
     log::info << "Starting Tun for " << tunaddr << "..." << log::endl;
@@ -107,7 +108,12 @@ void IpOverMesh::wifi2tunLoop() {
 int main() {
     try {
         log::init();
-        IpOverMesh self;
+        srand(time(NULL));
+        boost::shared_ptr<NetIf> wifiIface = Wifi::getWlanIfIp4Up();
+        if (wifiIface.get() == 0) {
+            throw FailException("Wifi", "No active wifi interface with IPv4 address");
+        }
+        IpOverMesh self(*wifiIface);
         system("ifconfig -a");
         
         log::info << "Press enter to stop the program" << log::endl;

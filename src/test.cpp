@@ -59,6 +59,7 @@ void test_pkt() {
 int main() {
     try {
         log::init();
+        srand(time(NULL));
         log::info << "start" << log::endl;
 
         // Test addresses
@@ -67,9 +68,8 @@ int main() {
         //log::debug << "Addr " << a << " " << a2 << " (" << a2.toString() << ")" << log::endl;
 
         // Test iface listing
-        //std::vector<NetIf> ifaces = NetIf::getAllNet();
-        std::vector<NetIf> ifaces = NetIf::getWifiUp();
-        log::info << "Active Wifi interfaces:" << log::endl;
+        std::vector<NetIf> ifaces = NetIf::getAllNet();
+        log::info << "Active interfaces:" << log::endl;
         for (std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++) {
             log::info << "- " << *i << log::endl;
         }

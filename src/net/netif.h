@@ -34,6 +34,8 @@ namespace iom
 
         const Address& getBroadcast() const;
 
+        bool isUp() const;
+
         /**
          * @brief Get all interfaces on the system
          */

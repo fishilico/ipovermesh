@@ -11,41 +11,31 @@
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
 
 namespace iom {
-    Wifi::Wifi()
+    Wifi::Wifi(const NetIf &netiface)
     :seq(0)
     {
-        std::vector<NetIf> ifaces = NetIf::getWifiUp();
-        for(std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++)
-        {
-            if(i->getAddress().getVersion() == 4)
-            {
-                interface = *i;
-
-                // Compute Tun address
-                CtlSocket ifaceSock(i->getName());
-                unsigned char hwaddr[6];
-                if (!ifaceSock.getHwAddr(hwaddr)) {
-                    throw FailException("Wifi", "Unable to retrieve an HW address");
-                }
-                address = Address::fromHw(hwaddr);
-
-                // Enable broadcast
-                ifaceSock.enableBroadcast(true);
-
-                // Listen to this interface on UDP:1337
-                SockAddress bindAddress(interface.getAddress(), 1337);
-                server = new UDPServer(bindAddress);
-                // Send messages to everyone on UDP:1337 (with broadcast)
-                SockAddress broadcastAddress(interface.getBroadcast(), 1337);
-                broadcastSocket = new UDPSocket(broadcastAddress, true);
-
-                srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));
-
-                cleaningThread = new boost::thread(boost::bind(&Wifi::clearOutdatedPacketsLoop, this, 1));
-                return;
-            }
+        interface = netiface;
+        // Compute Tun address
+        CtlSocket ifaceSock(interface.getName());
+        unsigned char hwaddr[6];
+        if (!ifaceSock.getHwAddr(hwaddr)) {
+            throw FailException("Wifi", "Unable to retrieve an HW address");
         }
-        throw FailException("Wifi", "No active wifi interface with IPv4 address");
+        address = Address::fromHw(hwaddr);
+
+        // Enable broadcast
+        ifaceSock.enableBroadcast(true);
+
+        // Listen to this interface on UDP:1337
+        SockAddress bindAddress(interface.getAddress(), 1337);
+        server = new UDPServer(bindAddress);
+        // Send messages to everyone on UDP:1337 (with broadcast)
+        SockAddress broadcastAddress(interface.getBroadcast(), 1337);
+        broadcastSocket = new UDPSocket(broadcastAddress, true);
+
+        srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));
+
+        cleaningThread = new boost::thread(boost::bind(&Wifi::clearOutdatedPacketsLoop, this, 1));
     }
 
     Wifi::~Wifi() {
@@ -76,6 +66,18 @@ namespace iom {
         if (broadcastSocket != NULL)
             delete broadcastSocket;
         broadcastSocket = NULL;
+    }
+
+    boost::shared_ptr<NetIf> Wifi::getWlanIfIp4Up() {
+        std::vector<NetIf> ifaces = NetIf::getAllNet();
+        for (std::vector<NetIf>::const_iterator i = ifaces.begin(); i != ifaces.end(); i++) {
+            if (i->getName().find("wlan") != std::string::npos) {
+                if (i->isUp() && i->getAddress().getVersion() == 4) {
+                    return boost::shared_ptr<NetIf>(new NetIf(*i));
+                }
+            }
+        }
+        return boost::shared_ptr<NetIf>();
     }
 
     void Wifi::recvRun()

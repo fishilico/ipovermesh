@@ -11,20 +11,25 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <map>
 
-namespace iom {
-
+namespace iom
+{
     class Wifi : public boost::noncopyable
     {
     public:
-
         /**
          * @brief Constructor
          * @param recvQueue Queue where packets from the WiFi are put
          */
-        Wifi();
+        Wifi(const NetIf &netiface);
         ~Wifi();
 
         void close();
+
+        /**
+         * @brief Get one WLAN interface UP with an IPv4 address
+         * @return a shared pointer which is NULL if no interface is found
+         */
+        static boost::shared_ptr<NetIf> getWlanIfIp4Up();
 
         /**
          * @brief Attempts to send an IPv6Packet on the mesh
@@ -112,4 +117,4 @@ namespace iom {
     };
 }
 
-#endif // IOM_MESH_WIFI_H
+#endif /* IOM_MESH_WIFI_H */
