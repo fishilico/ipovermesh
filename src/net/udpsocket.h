@@ -66,6 +66,12 @@ namespace iom
          */
         SockAddress getLastRecvAddr() const;
 
+        /**
+         * @brief Bind socket to a specific device
+         * @param devicename
+         */
+        void bindToDevice(const std::string& devicename);
+
     private:
         SockAddress lastRecvAddr;
     };

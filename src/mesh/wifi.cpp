@@ -32,6 +32,7 @@ namespace iom {
         // Send messages to everyone on UDP:1337 (with broadcast)
         SockAddress broadcastAddress(interface.getBroadcast(), 1337);
         broadcastSocket = new UDPSocket(broadcastAddress, true);
+        broadcastSocket->bindToDevice(interface.getName());
 
         srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));
 

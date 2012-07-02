@@ -92,4 +92,12 @@ namespace iom
         return lastRecvAddr;
     }
 
+    void UDPSocket::bindToDevice(const std::string& devicename) {
+        if (sock < 0) {
+            this->create();
+        }
+        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE,
+            devicename.c_str(), devicename.length() + 1) < 0)
+            throw ErrException("UDPSocket", "setsockopt(SO_BINDTODEVICE)");
+    }
 }
