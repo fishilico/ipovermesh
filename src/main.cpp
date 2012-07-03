@@ -6,7 +6,10 @@
 
 #include "ipovermesh.h"
 
-#define TTY_COLOR_YELLOW "\033[33;1m"
+// Tun -> MESH (input) in yellow
+#define TTY_COLOR_INPUT "\033[33;1m"
+// MESH -> Tun (output) in green
+#define TTY_COLOR_OUTPUT "\033[32;1m"
 #define TTY_COLOR_NORM "\033[m"
 
 using namespace iom;
@@ -78,7 +81,7 @@ void IpOverMesh::tun2wifiLoop() {
             if (p.get() == 0) {
                 log::error << "Read nothing" << log::endl;
             } else if (isRunning) {
-                log::debug << TTY_COLOR_YELLOW
+                log::debug << TTY_COLOR_INPUT
                     << "[Tunnel] Transmit " << p->getSize() << " bytes "
                     << p->getSourceAddress() << " -> " << p->getDestinationAddress()
                     << TTY_COLOR_NORM << log::endl;
@@ -99,7 +102,7 @@ void IpOverMesh::wifi2tunLoop() {
             if (p.get() == 0) {
                 log::error << "Recv nothing" << log::endl;
             } else if (isRunning) {
-                log::debug << TTY_COLOR_YELLOW
+                log::debug << TTY_COLOR_OUTPUT
                     << "[Tunnel] Transmit " << p->getSize() << " bytes "
                     << p->getSourceAddress() << " -> " << p->getDestinationAddress()
                     << TTY_COLOR_NORM << log::endl;
