@@ -37,6 +37,12 @@ namespace iom
         // send is not implemented yet
         //int send(const void *data, int size);
 
+        /**
+         * @brief Bind socket to a specific device
+         * @param devicename
+         */
+        void bindToDevice(const std::string& devicename);
+
     private:
         UDPSocket sock;
     };

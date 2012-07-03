@@ -29,11 +29,14 @@ namespace iom {
         ifaceSock.enableBroadcast(true);
 
         // Listen to this interface on UDP:1337
-        SockAddress bindAddress(interface.getAddress(), 1337);
-        server = new UDPServer(bindAddress);
+        //SockAddress bindAddress(interface.getAddress(), 1337);
+        SockAddress worldAddress(Address("255.255.255.255", 4), 1337);
+        server = new UDPServer(worldAddress);
+        server->bindToDevice(interface.getName());
+
         // Send messages to everyone on UDP:1337 (with broadcast)
-        SockAddress broadcastAddress(interface.getBroadcast(), 1337);
-        broadcastSocket = new UDPSocket(broadcastAddress, true);
+        //SockAddress broadcastAddress(interface.getBroadcast(), 1337);
+        broadcastSocket = new UDPSocket(worldAddress, true);
         broadcastSocket->bindToDevice(interface.getName());
 
         srvThread = new boost::thread(boost::bind(&Wifi::recvRun, this));

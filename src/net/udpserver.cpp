@@ -31,4 +31,8 @@ namespace iom
         return sock.send(data, size);
     }
      */
+
+    void UDPServer::bindToDevice(const std::string& devicename) {
+        sock.bindToDevice(devicename);
+    }
 }
