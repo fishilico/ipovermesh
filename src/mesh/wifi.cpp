@@ -105,7 +105,8 @@ namespace iom {
                     if (!server->isBinded()) {
                         break;
                     }
-                    log::debug << "Wifi Recv " << size<< " bytes" << log::endl;
+                    if (MESH_DEBUG_WIFI)
+                        log::debug << "[Wifi] Recv " << size<< " bytes" << log::endl;
                     parser.eat(data, size);
                     while((packet = parser.getPacket()) != NULL)
                     {
@@ -134,7 +135,7 @@ namespace iom {
 
     void Wifi::send(const IPv6Packet &packet)
     {
-        Address destination = packet.getDestinationAddress();
+        const Address& destination = packet.getDestinationAddress();
         boost::shared_ptr<Route> route = routingTable.getRoute(destination);
         if(route.get() == 0)
         {
@@ -144,8 +145,10 @@ namespace iom {
                 std::map<Address, ptime>::iterator rreplyIt = pendingRReplies.find(destination);
                 if(rreplyIt == pendingRReplies.end() || boost::posix_time::second_clock::local_time() - rreplyIt->second > RREQUEST_EXPIRATION_DELAY)
                 {
+                    // Send a route request
+                    if (MESH_DEBUG_WIFI)
+                        log::debug << "[Wifi] Route Request to " << destination << log::endl;
                     boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
-                    // Sent a route request
                     RRequestPacket rreq(address, destination, address, 1);
                     rreq.send(*broadcastSocket);
                     pendingRReplies.insert(std::pair<Address, ptime>(destination, boost::posix_time::second_clock::local_time()));
@@ -165,6 +168,8 @@ namespace iom {
                 packetsToSend.insert(it, std::pair<Address, std::queue<IPv6Packet> >(destination,queue));
             return;
         }
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Send to " << route->nextHop << " for " << destination << log::endl;
         send(packet, route->nextHop);
     }
 
@@ -237,6 +242,8 @@ namespace iom {
     void Wifi::receiveAck(GTTPacket *packet)
     {
         AckPacket ack(*packet);
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Recv ACK from " << ack.destination << log::endl;
         boost::unique_lock<boost::shared_mutex> lock(ackMut);
         std::map<std::pair<Address,int>, NAckPacket>::iterator nackIt = pendingAcks.find(sequenceIdentifier(ack.source, ack.seq));
         if(nackIt == pendingAcks.end())
@@ -247,6 +254,8 @@ namespace iom {
     void Wifi::receiveNAck(GTTPacket *packet)
     {
         NAckPacket nack(*packet);
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Recv NACK for " << nack.nexthop << log::endl;
         if(nack.nexthop != address)
             return;
         routingTable.invalidateRoute(nack.source);
@@ -259,6 +268,8 @@ namespace iom {
             return;
         }
         nack.nexthop = route->nextHop;
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Forward NACK for " << nack.nexthop << " to " << nack.nexthop << log::endl;
         nack.send(*broadcastSocket);
     }
 
@@ -269,10 +280,12 @@ namespace iom {
             // Ignore Mesh unicast from Wifi broadcast
             return;
         }
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Recv PKT for " << pkt.nexthop << ", send ACK" << log::endl;
         AckPacket ack(pkt.source, pkt.destination, pkt.nexthop, pkt.seq);
         ack.send(*broadcastSocket);
         if(pkt.destination == address) {
-            log::debug << "[Wifi] Recv " << pkt.size << " bytes from " << pkt.source << log::endl;
+            log::debug << "[Wifi] Recv IPv6 packet " << pkt.size << " bytes from " << pkt.source << log::endl;
             IPv6Packet *pkt6 = new IPv6Packet(pkt.data, pkt.size);
             //recvQueue->push(boost::shared_ptr<const IPv6Packet>(pkt6));
             recvQueue.push(pkt6);
@@ -292,6 +305,8 @@ namespace iom {
             nack.send(*broadcastSocket);
             return;
         }
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Forward pkt to " << route->nextHop << log::endl;
         pkt.nexthop = route->nextHop;
         send(pkt, nack);
     }
@@ -301,6 +316,8 @@ namespace iom {
         RReplyPacket rrep(*packet);
         if(rrep.nexthop != address)
             return;
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Recv Route reply from " << rrep.source << log::endl;
         Route *toSource = new Route(rrep.source,rrep.sender,rrep.n);
         Route *toNextHop = new Route(rrep.sender,rrep.sender,rrep.n);
         routingTable.addRoute(boost::shared_ptr<Route>(toSource));
@@ -327,6 +344,10 @@ namespace iom {
     void Wifi::receiveRRequest(GTTPacket *packet)
     {
         RRequestPacket rreq(*packet);
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Recv Route request from " << rreq.sender
+                << " to " << rreq.destination << log::endl;
+
         boost::shared_ptr<Route> toSender(new Route(rreq.sender, rreq.sender, 1));
         routingTable.addRoute(toSender);
         boost::shared_ptr<Route> toSource = routingTable.getRoute(rreq.source);
@@ -339,6 +360,8 @@ namespace iom {
         routingTable.addRoute(toSource);
         if(rreq.destination == address)
         {
+            if (MESH_DEBUG_WIFI)
+                log::debug << "[Wifi] Send Route reply" << log::endl;
             RReplyPacket rrep(address, rreq.source, address, rreq.sender, 1);
             rrep.send(*broadcastSocket);
             return;
@@ -346,12 +369,16 @@ namespace iom {
         boost::shared_ptr<Route> toDestination = routingTable.getRoute(rreq.destination);
         if(toDestination.get() != 0)
         {
+            if (MESH_DEBUG_WIFI)
+                log::debug << "[Wifi] Send Route reply" << log::endl;
             RReplyPacket rrep(rreq.destination, rreq.source, address, rreq.sender, toDestination->hops + 1);
             rrep.send(*broadcastSocket);
             return;
         }
         if(rreq.n < 100)
         {
+            if (MESH_DEBUG_WIFI)
+                log::debug << "[Wifi] Forward Route request" << log::endl;
             rreq.n++;
             rreq.send(*broadcastSocket);
         }

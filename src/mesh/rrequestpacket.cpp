@@ -19,7 +19,7 @@ namespace iom
                 << gttpkt.protocol << log::endl;
             throw ParserException("RRequestPacket", "Invalid GTT packet");
         }
-        if (gttpkt.method.compare("RREP")) {
+        if (gttpkt.method.compare("RREQ")) {
             log::error << "RRequest: Invalid GTT method "
                 << gttpkt.method << log::endl;
             throw ParserException("RRequestPacket", "Invalid GTT packet");

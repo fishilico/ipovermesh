@@ -5,6 +5,11 @@
 #include <map>
 #include <boost/thread/shared_mutex.hpp>
 
+#ifndef MESH_DEBUG_RT
+// Debug routing table
+#define MESH_DEBUG_RT 1
+#endif
+
 namespace iom {
 
     class RoutingTable

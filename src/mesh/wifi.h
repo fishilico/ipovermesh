@@ -11,6 +11,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <map>
 
+#ifndef MESH_DEBUG_WIFI
+// Debug Mesh wifi packets
+#define MESH_DEBUG_WIFI 1
+#endif
+
 namespace iom
 {
     class Wifi : public boost::noncopyable

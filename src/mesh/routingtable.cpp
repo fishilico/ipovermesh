@@ -35,6 +35,9 @@ namespace iom {
 
     void RoutingTable::invalidateRoute(const Address &destination)
     {
+        if (MESH_DEBUG_RT)
+            log::debug << "[Route] Invalidate route to " << destination << log::endl;
+
         boost::unique_lock<boost::shared_mutex> lock(mut);
         std::map<Address, boost::shared_ptr<Route> >::iterator it = routes.find(destination);
         if(it != routes.end())
@@ -43,6 +46,10 @@ namespace iom {
 
     void RoutingTable::addRoute(boost::shared_ptr<Route> route)
     {
+        if (MESH_DEBUG_RT)
+            log::debug << "[Route] Add route to " << route->destination << " via "
+                << route->nextHop << log::endl;
+
         boost::unique_lock<boost::shared_mutex> lock(mut);
         routes.insert(std::pair<Address, boost::shared_ptr<Route> >(route->destination, route));
     }

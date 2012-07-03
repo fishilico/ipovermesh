@@ -75,7 +75,7 @@ void IpOverMesh::tun2wifiLoop() {
             if (p.get() == 0) {
                 log::error << "Read nothing" << log::endl;
             } else if (isRunning) {
-                log::debug << "Transmit " << p->getSize() << " bytes "
+                log::debug << "[Tunnel] Transmit " << p->getSize() << " bytes "
                     << p->getSourceAddress() << " -> " << p->getDestinationAddress()
                     << log::endl;
                 wifi.send(*p);
@@ -95,7 +95,7 @@ void IpOverMesh::wifi2tunLoop() {
             if (p.get() == 0) {
                 log::error << "Recv nothing" << log::endl;
             } else if (isRunning) {
-                log::debug << "Transmit " << p->getSize() << " bytes"
+                log::debug << "[Tunnel] Transmit " << p->getSize() << " bytes"
                     << p->getSourceAddress() << " -> " << p->getDestinationAddress()
                     << log::endl;
                 tun.writePacket(*p);
