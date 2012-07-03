@@ -53,8 +53,6 @@ namespace iom
             this->updateLocalAddress();
         // TODO: Implement status error (ex. Conn closed, ...)
 
-        log::debug << "UDP sent " << localAddress << " -> " << address << ", " << bytes << " bytes" << log::endl;
-
         if (bytes < 0)
             throw ErrException("UDPSocket", "sendto");
         return bytes;

@@ -6,6 +6,9 @@
 
 #include "ipovermesh.h"
 
+#define TTY_COLOR_YELLOW "\033[33;1m"
+#define TTY_COLOR_NORM "\033[m"
+
 using namespace iom;
 
 class IpOverMesh : private boost::noncopyable {
@@ -75,9 +78,10 @@ void IpOverMesh::tun2wifiLoop() {
             if (p.get() == 0) {
                 log::error << "Read nothing" << log::endl;
             } else if (isRunning) {
-                log::debug << "[Tunnel] Transmit " << p->getSize() << " bytes "
+                log::debug << TTY_COLOR_YELLOW
+                    << "[Tunnel] Transmit " << p->getSize() << " bytes "
                     << p->getSourceAddress() << " -> " << p->getDestinationAddress()
-                    << log::endl;
+                    << TTY_COLOR_NORM << log::endl;
                 wifi.send(*p);
             }
         }
@@ -95,9 +99,10 @@ void IpOverMesh::wifi2tunLoop() {
             if (p.get() == 0) {
                 log::error << "Recv nothing" << log::endl;
             } else if (isRunning) {
-                log::debug << "[Tunnel] Transmit " << p->getSize() << " bytes"
+                log::debug << TTY_COLOR_YELLOW
+                    << "[Tunnel] Transmit " << p->getSize() << " bytes "
                     << p->getSourceAddress() << " -> " << p->getDestinationAddress()
-                    << log::endl;
+                    << TTY_COLOR_NORM << log::endl;
                 tun.writePacket(*p);
             }
         }
@@ -114,6 +119,7 @@ const Address& IpOverMesh::getTunAddress() const {
 int main() {
     try {
         log::init();
+        Socket::init();
         srand(time(NULL));
         boost::shared_ptr<NetIf> wifiIface = Wifi::getWlanIfIp4Up();
         if (wifiIface.get() == 0) {

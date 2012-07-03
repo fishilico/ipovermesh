@@ -8,7 +8,7 @@
 #include <boost/interprocess/detail/atomic.hpp>
 
 #define RREQUEST_EXPIRATION_DELAY boost::posix_time::seconds(60)
-#define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
+#define ACK_EXPIRATION_DELAY boost::posix_time::seconds(5)
 
 namespace iom {
     unsigned int Wifi::IPprefixLen = 48;
@@ -108,8 +108,7 @@ namespace iom {
                     if (!server->isBinded()) {
                         break;
                     }
-                    if (MESH_DEBUG_WIFI)
-                        log::debug << "[Wifi] Recv " << size<< " bytes" << log::endl;
+
                     parser.eat(data, size);
                     while((packet = parser.getPacket()) != NULL)
                     {
@@ -171,8 +170,6 @@ namespace iom {
                 packetsToSend.insert(it, std::pair<Address, std::queue<IPv6Packet> >(destination,queue));
             return;
         }
-        if (MESH_DEBUG_WIFI)
-            log::debug << "[Wifi] Send to " << route->nextHop << " for " << destination << log::endl;
         send(packet, route->nextHop);
     }
 
@@ -186,6 +183,9 @@ namespace iom {
 
     void Wifi::send(const PktPacket &packet, const NAckPacket &nack)
     {
+        if (MESH_DEBUG_WIFI)
+            log::debug << "[Wifi] Send IPv6 Pkt to " << packet.destination
+                << " via " <<  packet.nexthop << log::endl;
         packet.send(*broadcastSocket);
         sequenceIdentifier sequence(packet.source, packet.seq);
         boost::unique_lock<boost::shared_mutex> lock(ackMut);
@@ -226,10 +226,14 @@ namespace iom {
             std::map<ptime, sequenceIdentifier>::iterator sequencesIt = pendingAckSequences.begin();
             while(sequencesIt != pendingAckSequences.end() && boost::posix_time::second_clock::local_time() - sequencesIt->first > ACK_EXPIRATION_DELAY)
             {
+                // Invalidate packets if an ACK is not received
                 std::map<sequenceIdentifier, NAckPacket>::iterator nackIt = pendingAcks.find(sequencesIt->second);
-                nackIt->second.send(*broadcastSocket);
-                pendingAcks.erase(nackIt);
+                if (nackIt != pendingAcks.end()) {
+                    nackIt->second.send(*broadcastSocket);
+                    pendingAcks.erase(nackIt);
+                }
                 pendingAckSequences.erase(sequencesIt);
+                sequencesIt ++;
             }
         }
     }
@@ -328,10 +332,11 @@ namespace iom {
         if(rrep.destination == address)
         {
             boost::upgrade_lock<boost::shared_mutex> lock(pktMut);
+            // Clean up the queue associated with rrep.source
             std::map<Address, std::queue<IPv6Packet> >::iterator toSend = packetsToSend.find(rrep.source);
             if(toSend != packetsToSend.end())
             {
-                while(toSend->second.empty())
+                while (!toSend->second.empty())
                 {
                     send(toSend->second.front(), rrep.sender);
                     boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
