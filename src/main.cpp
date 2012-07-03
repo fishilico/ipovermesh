@@ -1,6 +1,6 @@
 /**
  * @file main.cpp
- * 
+ *
  * Main file for IP over MESH project
  */
 
@@ -13,17 +13,19 @@ public:
     IpOverMesh(const NetIf& wifiIface);
     ~IpOverMesh();
     void stop();
-    
+
     void tun2wifiLoop();
     void wifi2tunLoop();
-    
+
+    const Address& getTunAddress() const;
+
 private:
     Wifi wifi;
     Tundev tun;
-    
+
     boost::thread *tun2wifi;
     boost::thread *wifi2tun;
-    
+
     bool isRunning;
 };
 
@@ -38,9 +40,9 @@ IpOverMesh::IpOverMesh(const NetIf& wifiIface)
     // Start Tun
     log::info << "Starting Tun for " << tunaddr << "..." << log::endl;
     tun.setMTU(1300);
-    tun.setIPv6(tunaddr);
+    tun.setIPv6(tunaddr, Wifi::IPprefixLen);
     tun.activate(true);
-    
+
     isRunning = true;
     tun2wifi = new boost::thread(boost::bind(&IpOverMesh::tun2wifiLoop, this));
     wifi2tun = new boost::thread(boost::bind(&IpOverMesh::wifi2tunLoop, this));
@@ -105,6 +107,10 @@ void IpOverMesh::wifi2tunLoop() {
     }
 }
 
+const Address& IpOverMesh::getTunAddress() const {
+    return wifi.getAddress();
+}
+
 int main() {
     try {
         log::init();
@@ -115,7 +121,9 @@ int main() {
         }
         IpOverMesh self(*wifiIface);
         system("ifconfig -a");
-        
+
+        log::info << "Tun started on " << self.getTunAddress() << "/"
+            << Wifi::IPprefixLen << log::endl;
         log::info << "Press enter to stop the program" << log::endl;
         unsigned char c;
         read(0, &c, 1);

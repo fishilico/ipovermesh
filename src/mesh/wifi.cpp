@@ -11,6 +11,8 @@
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
 
 namespace iom {
+    unsigned int Wifi::IPprefixLen = 40;
+
     Wifi::Wifi(const NetIf &netiface)
     :seq(0)
     {
@@ -21,7 +23,7 @@ namespace iom {
         if (!ifaceSock.getHwAddr(hwaddr)) {
             throw FailException("Wifi", "Unable to retrieve an HW address");
         }
-        address = Address::fromHw(hwaddr);
+        address = Wifi::IPfromHw(hwaddr);
 
         // Enable broadcast
         ifaceSock.enableBroadcast(true);
@@ -103,19 +105,19 @@ namespace iom {
                     if (!server->isBinded()) {
                         break;
                     }
-                    log::debug << "Recv " << size<< "bytes" << log::endl;
+                    log::debug << "Wifi Recv " << size<< " bytes" << log::endl;
                     parser.eat(data, size);
                     while((packet = parser.getPacket()) != NULL)
                     {
-                        if(packet->method.compare("ACK"))
+                        if(!packet->method.compare("ACK"))
                             receiveAck(packet);
-                        else if(packet->method.compare("NACK"))
+                        else if(!packet->method.compare("NACK"))
                             receiveNAck(packet);
-                        else if(packet->method.compare("RREQ"))
+                        else if(!packet->method.compare("RREQ"))
                             receiveRRequest(packet);
-                        else if(packet->method.compare("RREP"))
+                        else if(!packet->method.compare("RREP"))
                             receiveRReply(packet);
-                        else if(packet->method.compare("PKT"))
+                        else if(!packet->method.compare("PKT"))
                             receivePkt(packet);
                         else
                             log::error << "Wifi: Unknown packet method " << packet->method << log::endl;
@@ -354,5 +356,34 @@ namespace iom {
             rreq.send(*broadcastSocket);
         }
     }
-}
 
+    Address Wifi::IPfromHw(const unsigned char hwaddr[6]) {
+        struct sockaddr_in6 saddr;
+        unsigned char *ipv6 = saddr.sin6_addr.s6_addr;
+        saddr.sin6_family = AF_INET6;
+        saddr.sin6_flowinfo = 0;
+        saddr.sin6_scope_id = 0;
+        saddr.sin6_port = 0;
+
+        // Prefix fd00:0da1:0000::/40
+        ipv6[0] = 0xfd;
+        ipv6[1] = 0;
+        ipv6[2] = 0x0d;
+        ipv6[3] = 0xa1;
+        ipv6[4] = 0;
+        ipv6[5] = 0;
+        // Random bytes
+        ipv6[6] = rand() & 0xff;
+        ipv6[7] = rand() & 0xff;
+        // MAC address
+        ipv6[8] = hwaddr[0];
+        ipv6[9] = hwaddr[1];
+        ipv6[10] = hwaddr[2];
+        ipv6[11] = 0xff;
+        ipv6[12] = 0xfe;
+        ipv6[13] = hwaddr[3];
+        ipv6[14] = hwaddr[4];
+        ipv6[15] = hwaddr[5];
+        return Address((struct sockaddr*) &saddr);
+    }
+}

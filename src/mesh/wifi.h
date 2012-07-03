@@ -58,6 +58,14 @@ namespace iom
          */
         const NetIf& getInterface() const;
 
+        /**
+         * @brief Compute an IPv6 address from a MAC address
+         * @param hwaddr MAC address (6 bytes)
+         * @return IPv6 Address
+         */
+        static Address IPfromHw(const unsigned char hwaddr[6]);
+        static unsigned int IPprefixLen;
+
     private:
         typedef boost::posix_time::ptime ptime;
         typedef std::pair<Address, int> sequenceIdentifier;

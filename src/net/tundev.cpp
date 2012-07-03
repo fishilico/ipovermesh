@@ -50,11 +50,13 @@ namespace iom
             throw FailException("TunDev", "Unable to set MTU");
     }
 
-    void Tundev::setIPv6(const Address &ip) {
+    void Tundev::setIPv6(const Address &ip, unsigned int prefixlen) {
         std::string cmd = "ifconfig ";
         cmd += devname;
         cmd += " add ";
         cmd += ip.toString();
+        cmd += "/";
+        cmd += String::fromInt(prefixlen);
         if (system(cmd.c_str()) != 0)
             throw FailException("TunDev", "Unable to set IP");
     }

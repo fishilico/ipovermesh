@@ -76,14 +76,14 @@ int main() {
         CtlSocket wifi("wlan0");
         unsigned char hwaddr[6];
         if (wifi.getHwAddr(hwaddr)) {
-            log::info << "wlan0, TUN IPv6 " << Address::fromHw(hwaddr) << log::endl;
+            log::info << "wlan0, TUN IPv6 " << Wifi::IPfromHw(hwaddr) << log::endl;
         }
 
         test_pkt();
 
         Tundev tun;
         tun.setMTU(1300);
-        tun.setIPv6(Address("aaaa::2"));
+        tun.setIPv6(Address("aaaa::2"), 16);
         tun.activate(true);
         system("ifconfig -a");
         while (true) {

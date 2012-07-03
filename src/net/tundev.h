@@ -36,7 +36,7 @@ namespace iom
          * @brief Sets the IPv6 for this device
          * @param ip
          */
-        void setIPv6(const Address &ip);
+        void setIPv6(const Address &ip, unsigned int prefixlen);
         /**
          * @brief Activates this device
          */
