@@ -235,15 +235,10 @@ namespace iom {
     void Wifi::receiveAck(GTTPacket *packet)
     {
         AckPacket ack(*packet);
-        if(ack.nexthop != address)
-            return;
         boost::unique_lock<boost::shared_mutex> lock(ackMut);
         std::map<std::pair<Address,int>, NAckPacket>::iterator nackIt = pendingAcks.find(sequenceIdentifier(ack.source, ack.seq));
         if(nackIt == pendingAcks.end())
-        {
-            log::error << "Wifi: Two ACKs received" << log::endl;
             return;
-        }
         pendingAcks.erase(nackIt);
     }
 
@@ -272,6 +267,8 @@ namespace iom {
             // Ignore Mesh unicast from Wifi broadcast
             return;
         }
+        AckPacket ack(pkt.source, pkt.destination, pkt.nexthop, pkt.seq);
+        ack.send(*broadcastSocket);
         if(pkt.destination == address) {
             log::debug << "[Wifi] Recv " << pkt.size << " bytes from " << pkt.source << log::endl;
             IPv6Packet *pkt6 = new IPv6Packet(pkt.data, pkt.size);
