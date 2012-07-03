@@ -36,6 +36,8 @@ namespace iom
             else
                 this->ipVersion = 4;
         }
+
+        this->simplifyIP();
     }
 
     Address::Address(const struct sockaddr *saddr) {
@@ -145,5 +147,12 @@ namespace iom
 
     bool operator<(const Address& addr1, const Address& addr2) {
         return addr1.compare(addr2) < 0;
+    }
+
+    void Address::simplifyIP() {
+        sockaddr_storage saddr;
+        this->getSockAddr((sockaddr*)&saddr, 0);
+        Address newAddr((sockaddr*)&saddr);
+        ip = newAddr.ip;
     }
 }

@@ -94,6 +94,9 @@ namespace iom
         friend bool operator<(const Address& addr1, const Address& addr2);
 
     private:
+        // Rewrite IP address to a more simplier form
+        void simplifyIP();
+
         std::string ip;
         // 4 or 6
         int ipVersion;

@@ -11,7 +11,7 @@
 #define ACK_EXPIRATION_DELAY boost::posix_time::seconds(60)
 
 namespace iom {
-    unsigned int Wifi::IPprefixLen = 40;
+    unsigned int Wifi::IPprefixLen = 48;
 
     Wifi::Wifi(const NetIf &netiface)
     :seq(0)
