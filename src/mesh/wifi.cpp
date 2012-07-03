@@ -209,7 +209,7 @@ namespace iom {
     {
         {
             boost::upgrade_lock<boost::shared_mutex> lock(rrepMut);
-            for(std::map<Address, ptime>::iterator it = pendingRReplies.begin(); it != pendingRReplies.end(); it++)
+            for(std::map<Address, ptime>::iterator it = pendingRReplies.begin(); it != pendingRReplies.end();)
             {
                 if(boost::posix_time::second_clock::local_time() - it->second > RREQUEST_EXPIRATION_DELAY)
                 {
@@ -217,8 +217,10 @@ namespace iom {
                     std::map<Address, std::queue<IPv6Packet> >::iterator packetQueue = packetsToSend.find(it->first);
                     packetsToSend.erase(packetQueue);
                     boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
-                    pendingRReplies.erase(it);
+                    pendingRReplies.erase(it++);
                 }
+                else
+                    it++;
             }
         }
         {
@@ -232,8 +234,7 @@ namespace iom {
                     nackIt->second.send(*broadcastSocket);
                     pendingAcks.erase(nackIt);
                 }
-                pendingAckSequences.erase(sequencesIt);
-                sequencesIt ++;
+                pendingAckSequences.erase(sequencesIt++);
             }
         }
     }
