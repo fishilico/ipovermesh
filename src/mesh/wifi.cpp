@@ -215,7 +215,11 @@ namespace iom {
                     {
                         boost::unique_lock<boost::shared_mutex> ulockPkt(pktMut);
                         std::map<Address, std::queue<IPv6Packet> >::iterator packetQueue = packetsToSend.find(it->first);
-                        packetsToSend.erase(packetQueue);
+                        if (packetQueue != packetsToSend.end()) {
+                            log::debug << "No route found to " << it->first
+                                << ", erase packets" << log::endl;
+                            packetsToSend.erase(packetQueue);
+                        }
                     }
                     pendingRReplies.erase(it++);
                 }
@@ -231,6 +235,7 @@ namespace iom {
                 // Invalidate packets if an ACK is not received
                 std::map<sequenceIdentifier, NAckPacket>::iterator nackIt = pendingAcks.find(sequencesIt->second);
                 if (nackIt != pendingAcks.end()) {
+                    log::debug << "No ACK for " << nackIt->second.source << ", send NACK" << log::endl;
                     nackIt->second.send(*broadcastSocket);
                     pendingAcks.erase(nackIt);
                 }
