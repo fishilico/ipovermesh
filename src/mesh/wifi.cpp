@@ -246,9 +246,15 @@ namespace iom {
 
     void Wifi::clearOutdatedPacketsLoop(unsigned int seconds)
     {
-        while (server->isBinded()) {
-            clearOutdatedPackets();
-            sleep(seconds);
+        try {
+            log::setThreadName("ClearPackets");
+            while (server->isBinded()) {
+                clearOutdatedPackets();
+                sleep(seconds);
+            }
+        } catch (Exception e) {
+            // Log exceptions
+            log::fatal << e << log::endl;
         }
     }
 
@@ -256,7 +262,7 @@ namespace iom {
     {
         AckPacket ack(*packet);
         if (MESH_DEBUG_WIFI)
-            log::debug << "[Wifi] Recv ACK from " << ack.destination << log::endl;
+            log::debug << "[Wifi] Recv ACK " << ack.seq << " from " << ack.destination << log::endl;
         boost::unique_lock<boost::shared_mutex> lock(ackMut);
         std::map<std::pair<Address,int>, NAckPacket>::iterator nackIt = pendingAcks.find(sequenceIdentifier(ack.source, ack.seq));
         if(nackIt == pendingAcks.end())
@@ -294,7 +300,8 @@ namespace iom {
             return;
         }
         if (MESH_DEBUG_WIFI)
-            log::debug << "[Wifi] Recv PKT for " << pkt.nexthop << ", send ACK" << log::endl;
+            log::debug << "[Wifi] Recv PKT for " << pkt.nexthop
+                << ", send ACK" << pkt.seq << log::endl;
         AckPacket ack(pkt.source, pkt.destination, pkt.nexthop, pkt.seq);
         ack.send(*broadcastSocket);
         if(pkt.destination == address) {
