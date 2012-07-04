@@ -143,14 +143,13 @@ namespace iom {
         {
             // No known route. Let's discover one !
             {
-                boost::upgrade_lock<boost::shared_mutex> lock(rrepMut);
+                boost::unique_lock<boost::shared_mutex> lock(rrepMut);
                 std::map<Address, ptime>::iterator rreplyIt = pendingRReplies.find(destination);
                 if(rreplyIt == pendingRReplies.end() || boost::posix_time::second_clock::local_time() - rreplyIt->second > RREQUEST_EXPIRATION_DELAY)
                 {
                     // Send a route request
                     if (MESH_DEBUG_WIFI)
                         log::debug << "[Wifi] Route Request to " << destination << log::endl;
-                    boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
                     RRequestPacket rreq(address, destination, address, 1);
                     rreq.send(*broadcastSocket);
                     pendingRReplies.insert(std::pair<Address, ptime>(destination, boost::posix_time::second_clock::local_time()));
@@ -208,15 +207,16 @@ namespace iom {
     void Wifi::clearOutdatedPackets()
     {
         {
-            boost::upgrade_lock<boost::shared_mutex> lock(rrepMut);
+            boost::unique_lock<boost::shared_mutex> lock(rrepMut);
             for(std::map<Address, ptime>::iterator it = pendingRReplies.begin(); it != pendingRReplies.end();)
             {
                 if(boost::posix_time::second_clock::local_time() - it->second > RREQUEST_EXPIRATION_DELAY)
                 {
-                    boost::unique_lock<boost::shared_mutex> ulockPkt(pktMut);
-                    std::map<Address, std::queue<IPv6Packet> >::iterator packetQueue = packetsToSend.find(it->first);
-                    packetsToSend.erase(packetQueue);
-                    boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
+                    {
+                        boost::unique_lock<boost::shared_mutex> ulockPkt(pktMut);
+                        std::map<Address, std::queue<IPv6Packet> >::iterator packetQueue = packetsToSend.find(it->first);
+                        packetsToSend.erase(packetQueue);
+                    }
                     pendingRReplies.erase(it++);
                 }
                 else
@@ -332,7 +332,7 @@ namespace iom {
         routingTable.addRoute(boost::shared_ptr<Route>(toNextHop));
         if(rrep.destination == address)
         {
-            boost::upgrade_lock<boost::shared_mutex> lock(pktMut);
+            boost::unique_lock<boost::shared_mutex> lock(pktMut);
             // Clean up the queue associated with rrep.source
             std::map<Address, std::queue<IPv6Packet> >::iterator toSend = packetsToSend.find(rrep.source);
             if(toSend != packetsToSend.end())
@@ -340,10 +340,8 @@ namespace iom {
                 while (!toSend->second.empty())
                 {
                     send(toSend->second.front(), rrep.sender);
-                    boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
                     toSend->second.pop();
                 }
-                boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
                 packetsToSend.erase(toSend);
             }
             return;

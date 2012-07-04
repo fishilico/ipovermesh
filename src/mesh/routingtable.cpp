@@ -20,13 +20,12 @@ namespace iom {
 
     boost::shared_ptr<Route> RoutingTable::getRoute(const Address &destination)
     {
-        boost::upgrade_lock<boost::shared_mutex> lock(mut);
+        boost::unique_lock<boost::shared_mutex> lock(mut);
         std::map<Address, boost::shared_ptr<Route> >::iterator it = routes.find(destination);
         if(it == routes.end())
             return boost::shared_ptr<Route>();
         if(it->second->hasExpired())
         {
-            boost::upgrade_to_unique_lock<boost::shared_mutex> ulock(lock);
             routes.erase(it);
             return boost::shared_ptr<Route>();
         }
